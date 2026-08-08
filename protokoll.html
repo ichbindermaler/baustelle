@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#e3001b">
+<title>Baustellenprotokoll · Malerbetrieb Bäßgen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rot-hell:#e3001b;
+  --rot-dunkel:#a10e1e;
+  --verlauf:linear-gradient(135deg,#e3001b 0%,#a10e1e 100%);
+  --tinte:#14161a;
+  --grau:#5d636e;
+  --linie:#e3e5e9;
+  --flaeche:#f4f5f7;
+  --papier:#ffffff;
+  --gesendet:#1f7a45;
+  --wartet:#b26a00;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--flaeche);
+  color:var(--tinte);
+  font-size:16px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:132px;
+}
+.streifen{height:5px;background:var(--verlauf)}
+
+/* ---------- Kopf ---------- */
+.haftend{position:sticky;top:0;z-index:20}
+.kopf{
+  background:var(--papier);
+  border-bottom:1px solid var(--linie);
+  padding:12px 16px;
+  display:flex;align-items:center;gap:14px;
+}
+.kopf img{height:46px;width:auto;display:block;flex:none}
+.kopf-text{min-width:0}
+.kopf-eyebrow{
+  font-family:'Oswald',sans-serif;font-weight:500;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--grau);
+}
+.kopf-titel{
+  font-family:'Oswald',sans-serif;font-weight:600;
+  font-size:20px;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* ---------- Warteschlange ---------- */
+.warteband{
+  display:none;align-items:center;gap:10px;
+  background:#fff6e6;border-bottom:1px solid #f0d9ad;
+  color:var(--wartet);
+  padding:10px 16px;font-size:14px;font-weight:500;
+}
+.warteband.an{display:flex}
+.punkt{width:9px;height:9px;border-radius:50%;background:var(--wartet);flex:none}
+
+/* ---------- Bereiche ---------- */
+main{padding:16px;max-width:640px;margin:0 auto}
+.karte{
+  background:var(--papier);
+  border:1px solid var(--linie);
+  border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;
+}
+.karte-titel{
+  font-family:'Oswald',sans-serif;font-weight:600;
+  font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grau);
+  margin:0 0 12px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+}
+.karte-titel .zaehler{font-family:'Inter',sans-serif;letter-spacing:0;text-transform:none;font-size:13px;font-weight:500}
+
+/* ---------- Tätigkeiten (Signature) ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  font-family:'Oswald',sans-serif;font-weight:500;font-size:15px;
+  padding:11px 15px;min-height:46px;
+  display:inline-flex;align-items:center;
+  border:1.5px solid var(--linie);
+  border-radius:999px;
+  background:var(--papier);color:var(--tinte);
+  cursor:pointer;user-select:none;
+  transition:transform .12s ease,border-color .12s ease;
+}
+.chip:active{transform:scale(.97)}
+.chip[aria-pressed="true"]{
+  background:var(--verlauf);
+  border-color:transparent;
+  color:#fff;
+}
+.chip:focus-visible{outline:3px solid #14161a;outline-offset:2px}
+
+/* ---------- Felder ---------- */
+label.feld{display:block;font-size:13px;font-weight:600;color:var(--grau);margin:0 0 6px}
+textarea,input[type="text"],input[type="number"],select{
+  font-family:'Inter',sans-serif;font-size:16px;
+  width:100%;padding:12px;
+  border:1.5px solid var(--linie);border-radius:10px;
+  background:var(--papier);color:var(--tinte);
+}
+textarea{min-height:84px;resize:vertical}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--rot-hell)}
+
+/* ---------- Material ---------- */
+.mat-zeile{display:grid;grid-template-columns:1fr 76px 92px 44px;gap:8px;margin-bottom:8px;align-items:center}
+.mat-kopf{display:grid;grid-template-columns:1fr 76px 92px 44px;gap:8px;margin-bottom:6px}
+.mat-kopf span{font-size:12px;font-weight:600;color:var(--grau)}
+.weg{
+  border:1.5px solid var(--linie);background:var(--papier);
+  border-radius:10px;height:46px;cursor:pointer;
+  font-size:20px;line-height:1;color:var(--grau);
+}
+.weg:active{background:var(--flaeche)}
+
+/* ---------- Fotos ---------- */
+.foto-gitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px;margin-top:12px}
+.foto{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--linie)}
+.foto img{width:100%;height:100%;object-fit:cover;display:block}
+.foto button{
+  position:absolute;top:4px;right:4px;
+  width:30px;height:30px;border-radius:50%;
+  border:none;background:rgba(20,22,26,.72);color:#fff;
+  font-size:16px;line-height:1;cursor:pointer;
+}
+
+/* ---------- Knöpfe ---------- */
+.knopf-zweit{
+  font-family:'Oswald',sans-serif;font-weight:500;font-size:15px;
+  width:100%;min-height:48px;
+  border:1.5px solid var(--linie);border-radius:10px;
+  background:var(--papier);color:var(--tinte);cursor:pointer;
+}
+.knopf-zweit:active{background:var(--flaeche)}
+
+.fussleiste{
+  position:fixed;left:0;right:0;bottom:0;z-index:25;
+  background:var(--papier);
+  border-top:1px solid var(--linie);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.fussleiste-innen{max-width:640px;margin:0 auto}
+.senden{
+  font-family:'Oswald',sans-serif;font-weight:600;
+  font-size:18px;letter-spacing:.02em;
+  width:100%;min-height:56px;
+  border:none;border-radius:12px;
+  background:var(--verlauf);color:#fff;cursor:pointer;
+}
+.senden:disabled{background:#c9ccd2;cursor:not-allowed}
+.senden:focus-visible{outline:3px solid #14161a;outline-offset:2px}
+.status{
+  font-size:13.5px;margin-top:8px;text-align:center;color:var(--grau);
+  min-height:19px;
+}
+.status.gut{color:var(--gesendet);font-weight:600}
+.status.warte{color:var(--wartet);font-weight:600}
+.status.fehler{color:var(--rot-dunkel);font-weight:600}
+
+.hinweis{font-size:13px;color:var(--grau);margin:10px 0 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="streifen"></div>
+
+<div class="haftend">
+<header class="kopf">
+  <img src="data:image/png;base64,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" alt="Malerbetrieb Bäßgen">
+  <div class="kopf-text">
+    <div class="kopf-eyebrow">Baustellenprotokoll</div>
+    <div class="kopf-titel" id="baustelleName">Baustelle wählen</div>
+  </div>
+</header>
+
+<div class="warteband" id="warteband">
+  <span class="punkt"></span>
+  <span id="wartetext">1 Eintrag wartet auf Empfang</span>
+</div>
+</div>
+
+<main>
+
+  <section class="karte" id="karteBaustelle" hidden>
+    <h2 class="karte-titel">Baustelle</h2>
+    <label class="feld" for="baustelleEingabe">Baustellen-Nummer oder Bezeichnung</label>
+    <input type="text" id="baustelleEingabe" placeholder="z. B. 2026-041 Schulstraße" autocomplete="off">
+    <p class="hinweis">Normalerweise kommt die Baustelle über den QR-Code. Nur eintragen, wenn kein Code zur Hand ist.</p>
+  </section>
+
+  <section class="karte">
+    <h2 class="karte-titel">
+      <span>Was wurde gemacht</span>
+      <span class="zaehler" id="taetigkeitZaehler">0 gewählt</span>
+    </h2>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section class="karte">
+    <h2 class="karte-titel">Material</h2>
+    <div class="mat-kopf">
+      <span>Artikel</span><span>Menge</span><span>Einheit</span><span></span>
+    </div>
+    <div id="matListe"></div>
+    <button type="button" class="knopf-zweit" id="matPlus">+ Position</button>
+  </section>
+
+  <section class="karte">
+    <h2 class="karte-titel">
+      <span>Fotos</span>
+      <span class="zaehler" id="fotoZaehler">0</span>
+    </h2>
+    <button type="button" class="knopf-zweit" id="fotoKnopf">Foto aufnehmen oder wählen</button>
+    <input type="file" id="fotoInput" accept="image/*" capture="environment" multiple hidden>
+    <div class="foto-gitter" id="fotoGitter"></div>
+  </section>
+
+  <section class="karte">
+    <h2 class="karte-titel">Bemerkung</h2>
+    <label class="feld" for="bemerkung">Besonderheiten, Behinderungen, Absprachen</label>
+    <textarea id="bemerkung" placeholder="Optional"></textarea>
+  </section>
+
+</main>
+
+<div class="fussleiste">
+  <div class="fussleiste-innen">
+    <button class="senden" id="senden">Eintrag senden</button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+/* =======================================================================
+   ANPASSEN — diese drei Blöcke sind alles, was du zum Umstellen brauchst.
+   ======================================================================= */
+
+// 1) n8n-Webhook. Bis der Server steht, bleibt der Platzhalter stehen —
+//    Einträge landen dann in der lokalen Warteschlange und gehen später raus.
+const WEBHOOK_URL = "PLATZHALTER_N8N_WEBHOOK";
+
+// 2) Betrieb. Bleibt vorerst fest, macht die Daten später mandantenfähig.
+const BETRIEB_ID = "baessgen";
+
+// 3) Tätigkeiten. Reihenfolge = Reihenfolge auf dem Handy.
+//    Bitte auf eure echten Arbeitsschritte anpassen.
+const TAETIGKEITEN = [
+  "Baustelle einrichten",
+  "Abkleben / Abdecken",
+  "Altbelag entfernen",
+  "Untergrund prüfen",
+  "Spachteln",
+  "Schleifen",
+  "Grundieren",
+  "Tapezieren",
+  "Anstrich innen",
+  "Lackieren",
+  "Fassade / WDVS",
+  "Bodenbeschichtung",
+  "Trockenbau",
+  "Gerüst auf-/abbauen",
+  "Reinigung / Aufräumen"
+];
+
+const EINHEITEN = ["l","kg","Stk","m²","m","Rolle","Gebinde","Sack"];
+
+/* ======================= ab hier Technik ============================== */
+
+const SPEICHER = { token:"mb_prot_token", queue:"mb_prot_queue", baustelle:"mb_prot_baustelle" };
+const MAX_KANTE = 1600;      // Fotos werden vorher verkleinert
+const JPEG_QUALITAET = 0.72;
+
+const el = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+
+let gewaehlt = new Set();
+let fotos = [];
+let sendeLaeuft = false;
+
+/* ---------- Token & Baustelle ---------- */
+const token = params.get("t") || localStorage.getItem(SPEICHER.token) || "";
+if (params.get("t")) localStorage.setItem(SPEICHER.token, params.get("t"));
+
+let baustelleId = params.get("b") || "";
+let baustelleName = params.get("bn") || baustelleId;
+
+if (!baustelleId) {
+  const gemerkt = localStorage.getItem(SPEICHER.baustelle);
+  if (gemerkt) { const o = JSON.parse(gemerkt); baustelleId = o.id; baustelleName = o.name; }
+}
+if (baustelleId) {
+  el("baustelleName").textContent = baustelleName;
+  localStorage.setItem(SPEICHER.baustelle, JSON.stringify({id:baustelleId,name:baustelleName}));
+} else {
+  el("karteBaustelle").hidden = false;
+  el("baustelleEingabe").addEventListener("input", e => {
+    baustelleId = baustelleName = e.target.value.trim();
+    el("baustelleName").textContent = baustelleName || "Baustelle wählen";
+    pruefeSendbar();
+  });
+}
+
+/* ---------- Tätigkeiten ---------- */
+const chips = el("chips");
+TAETIGKEITEN.forEach(t => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = t;
+  b.setAttribute("aria-pressed","false");
+  b.addEventListener("click", () => {
+    if (gewaehlt.has(t)) { gewaehlt.delete(t); b.setAttribute("aria-pressed","false"); }
+    else { gewaehlt.add(t); b.setAttribute("aria-pressed","true"); }
+    el("taetigkeitZaehler").textContent = gewaehlt.size + " gewählt";
+    pruefeSendbar();
+  });
+  chips.appendChild(b);
+});
+
+/* ---------- Material ---------- */
+function matZeile(){
+  const zeile = document.createElement("div");
+  zeile.className = "mat-zeile";
+
+  const artikel = document.createElement("input");
+  artikel.type = "text"; artikel.placeholder = "z. B. Tiefgrund"; artikel.autocomplete = "off";
+
+  const menge = document.createElement("input");
+  menge.type = "number"; menge.inputMode = "decimal"; menge.min = "0"; menge.step = "any"; menge.placeholder = "0";
+
+  const einheit = document.createElement("select");
+  EINHEITEN.forEach(e => { const o = document.createElement("option"); o.value = o.textContent = e; einheit.appendChild(o); });
+
+  const weg = document.createElement("button");
+  weg.type = "button"; weg.className = "weg"; weg.textContent = "×";
+  weg.setAttribute("aria-label","Position entfernen");
+  weg.addEventListener("click", () => zeile.remove());
+
+  zeile.append(artikel, menge, einheit, weg);
+  el("matListe").appendChild(zeile);
+  return artikel;
+}
+el("matPlus").addEventListener("click", () => matZeile().focus());
+matZeile();
+
+function materialSammeln(){
+  return [...el("matListe").querySelectorAll(".mat-zeile")].map(z => {
+    const [a,m,e] = z.querySelectorAll("input,select");
+    return { artikel:a.value.trim(), menge:parseFloat(m.value), einheit:e.value };
+  }).filter(p => p.artikel && !isNaN(p.menge) && p.menge > 0);
+}
+
+/* ---------- Fotos ---------- */
+el("fotoKnopf").addEventListener("click", () => el("fotoInput").click());
+el("fotoInput").addEventListener("change", async e => {
+  for (const datei of [...e.target.files]) {
+    try { fotos.push(await verkleinern(datei)); } catch(_) {}
+  }
+  e.target.value = "";
+  zeichneFotos();
+});
+
+function verkleinern(datei){
+  return new Promise((ok, fehler) => {
+    const leser = new FileReader();
+    leser.onerror = () => fehler();
+    leser.onload = () => {
+      const bild = new Image();
+      bild.onerror = () => fehler();
+      bild.onload = () => {
+        let {width:w, height:h} = bild;
+        const f = Math.min(1, MAX_KANTE / Math.max(w,h));
+        w = Math.round(w*f); h = Math.round(h*f);
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(bild, 0, 0, w, h);
+        ok({ name: datei.name || "foto.jpg", typ:"image/jpeg", daten: c.toDataURL("image/jpeg", JPEG_QUALITAET).split(",")[1] });
+      };
+      bild.src = leser.result;
+    };
+    leser.readAsDataURL(datei);
+  });
+}
+
+function zeichneFotos(){
+  const g = el("fotoGitter");
+  g.innerHTML = "";
+  fotos.forEach((f,i) => {
+    const kachel = document.createElement("div");
+    kachel.className = "foto";
+    const img = document.createElement("img");
+    img.src = "data:image/jpeg;base64," + f.daten;
+    img.alt = "Aufnahme " + (i+1);
+    const weg = document.createElement("button");
+    weg.type = "button"; weg.textContent = "×";
+    weg.setAttribute("aria-label","Foto entfernen");
+    weg.addEventListener("click", () => { fotos.splice(i,1); zeichneFotos(); });
+    kachel.append(img, weg);
+    g.appendChild(kachel);
+  });
+  el("fotoZaehler").textContent = fotos.length;
+  pruefeSendbar();
+}
+
+/* ---------- Warteschlange ---------- */
+const queueLesen = () => JSON.parse(localStorage.getItem(SPEICHER.queue) || "[]");
+const queueSchreiben = q => localStorage.setItem(SPEICHER.queue, JSON.stringify(q));
+
+function zeichneWarteband(){
+  const n = queueLesen().length;
+  el("warteband").classList.toggle("an", n > 0);
+  el("wartetext").textContent = n === 1
+    ? "1 Eintrag wartet auf Empfang"
+    : n + " Einträge warten auf Empfang";
+}
+
+async function queueLeeren(){
+  if (WEBHOOK_URL === "PLATZHALTER_N8N_WEBHOOK") return;
+  let q = queueLesen();
+  if (!q.length || !navigator.onLine) return;
+  const rest = [];
+  for (const eintrag of q) {
+    try {
+      const a = await fetch(WEBHOOK_URL, {
+        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(eintrag)
+      });
+      if (!a.ok) rest.push(eintrag);
+    } catch(_) { rest.push(eintrag); }
+  }
+  queueSchreiben(rest);
+  zeichneWarteband();
+  if (q.length && !rest.length) melde("Nachgesendet, alles übertragen.", "gut");
+}
+
+/* ---------- Senden ---------- */
+function pruefeSendbar(){
+  const bereit = !!baustelleId && (gewaehlt.size > 0 || fotos.length > 0 || materialSammeln().length > 0);
+  el("senden").disabled = !bereit || sendeLaeuft;
+}
+
+function melde(text, art=""){
+  const s = el("status");
+  s.textContent = text;
+  s.className = "status " + art;
+}
+
+el("senden").addEventListener("click", async () => {
+  if (sendeLaeuft) return;
+
+  const eintrag = {
+    betrieb_id: BETRIEB_ID,
+    baustelle_id: baustelleId,
+    token: token,
+    erfasst_lokal: new Date().toISOString(),
+    taetigkeiten: [...gewaehlt],
+    bemerkung: el("bemerkung").value.trim(),
+    material: materialSammeln(),
+    fotos: fotos
+  };
+
+  sendeLaeuft = true;
+  el("senden").disabled = true;
+  melde("Wird gesendet …");
+
+  let angekommen = false;
+  if (WEBHOOK_URL !== "PLATZHALTER_N8N_WEBHOOK" && navigator.onLine) {
+    try {
+      const a = await fetch(WEBHOOK_URL, {
+        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(eintrag)
+      });
+      angekommen = a.ok;
+    } catch(_) {}
+  }
+
+  if (angekommen) {
+    melde("Gespeichert. Danke!", "gut");
+  } else {
+    const q = queueLesen(); q.push(eintrag); queueSchreiben(q);
+    zeichneWarteband();
+    melde("Kein Empfang — Eintrag ist gesichert und geht automatisch raus.", "warte");
+  }
+
+  formularLeeren();
+  sendeLaeuft = false;
+  pruefeSendbar();
+});
+
+function formularLeeren(){
+  gewaehlt.clear();
+  chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed","false"));
+  el("taetigkeitZaehler").textContent = "0 gewählt";
+  fotos = []; zeichneFotos();
+  el("bemerkung").value = "";
+  el("matListe").innerHTML = ""; matZeile();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ---------- Start ---------- */
+zeichneWarteband();
+queueLeeren();
+pruefeSendbar();
+window.addEventListener("online", queueLeeren);
+setInterval(queueLeeren, 60000);
+</script>
+</body>
+</html>

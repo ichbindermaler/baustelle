@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#e3001b">
+<title>Baustelle · Malerbetrieb Bäßgen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rot-hell:#e3001b;
+  --rot-dunkel:#a10e1e;
+  --verlauf:linear-gradient(135deg,#e3001b 0%,#a10e1e 100%);
+  --tinte:#14161a;
+  --grau:#5d636e;
+  --linie:#e3e5e9;
+  --flaeche:#f4f5f7;
+  --papier:#fff;
+  --laeuft:#1f7a45;
+  --arbeit:#b26a00;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--flaeche);color:var(--tinte);
+  font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:40px;
+}
+.streifen{height:5px;background:var(--verlauf)}
+
+.kopf{
+  background:var(--papier);border-bottom:1px solid var(--linie);
+  padding:14px 16px;display:flex;align-items:center;gap:14px;
+}
+.kopf img{height:50px;width:auto;display:block;flex:none}
+.kopf-eyebrow{
+  font-family:'Oswald',sans-serif;font-weight:500;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--grau);
+}
+.kopf-titel{font-family:'Oswald',sans-serif;font-weight:600;font-size:21px;line-height:1.15}
+
+main{max-width:820px;margin:0 auto;padding:18px 16px}
+
+/* Rollenumschalter */
+.rollen{display:flex;gap:8px;margin-bottom:20px}
+.rollen[hidden]{display:none}
+.rolle{
+  font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;
+  flex:1;min-height:44px;padding:10px 12px;
+  border:1.5px solid var(--linie);border-radius:10px;
+  background:var(--papier);color:var(--grau);cursor:pointer;
+}
+.rolle[aria-pressed="true"]{background:var(--tinte);border-color:var(--tinte);color:#fff}
+.rolle:focus-visible{outline:3px solid var(--rot-hell);outline-offset:2px}
+
+.gruppe-titel{
+  font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--grau);
+  margin:26px 0 10px;
+}
+.gruppe-titel:first-of-type{margin-top:0}
+
+.gitter{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+
+.kachel{
+  display:block;text-decoration:none;color:inherit;
+  background:var(--papier);border:1px solid var(--linie);
+  border-radius:var(--radius);padding:16px;
+  transition:transform .12s ease,border-color .12s ease;
+}
+a.kachel:hover{border-color:var(--rot-hell)}
+a.kachel:active{transform:scale(.985)}
+a.kachel:focus-visible{outline:3px solid var(--rot-hell);outline-offset:2px}
+.kachel.gesperrt{opacity:.58;cursor:default}
+
+.kachel-name{font-family:'Oswald',sans-serif;font-weight:600;font-size:18px;margin-bottom:4px}
+.kachel-text{font-size:14px;color:var(--grau);line-height:1.4}
+
+.marke{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  margin-top:10px;
+}
+.marke::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.marke.laeuft{color:var(--laeuft)}
+.marke.arbeit{color:var(--arbeit)}
+.marke.geplant{color:var(--grau)}
+
+.leer{
+  background:var(--papier);border:1px dashed var(--linie);
+  border-radius:var(--radius);padding:22px;text-align:center;color:var(--grau);font-size:14.5px;
+}
+.fuss{margin-top:28px;font-size:13px;color:var(--grau);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="streifen"></div>
+
+<header class="kopf">
+  <img src="data:image/png;base64,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" alt="Malerbetrieb Bäßgen">
+  <div>
+    <div class="kopf-eyebrow">Baustelle</div>
+    <div class="kopf-titel" id="begruessung">Übersicht</div>
+  </div>
+</header>
+
+<main>
+  <div class="rollen" id="rollen" hidden>
+    <button type="button" class="rolle" data-rolle="mitarbeiter">Baustelle</button>
+    <button type="button" class="rolle" data-rolle="buero">Büro</button>
+    <button type="button" class="rolle" data-rolle="chef">Leitung</button>
+  </div>
+
+  <div id="inhalt"></div>
+
+  <p class="fuss" id="fuss"></p>
+</main>
+
+<script>
+/* =======================================================================
+   ANPASSEN
+   ======================================================================= */
+
+// Werkzeuge. rollen = wer es im Menü sieht. zustand = laeuft | arbeit | geplant.
+// Wer "geplant" oder "arbeit" ist, wird für Mitarbeiter ausgeblendet.
+const WERKZEUGE = [
+  { name:"Baustellenprotokoll", datei:"protokoll.html",
+    text:"Leistungen melden, Material, Fotos",
+    gruppe:"Auf der Baustelle", rollen:["mitarbeiter"], zustand:"arbeit" },
+
+  { name:"Gerätecheck", datei:"geraetecheck.html",
+    text:"Zustand melden nach dem QR-Scan",
+    gruppe:"Auf der Baustelle", rollen:["mitarbeiter"], zustand:"geplant" },
+
+  { name:"Baustellendoku", datei:"baustellendoku.html",
+    text:"Fotos vor, während und nach der Arbeit",
+    gruppe:"Auf der Baustelle", rollen:["mitarbeiter"], zustand:"geplant" },
+
+  { name:"Check-in", datei:"checkin.html",
+    text:"An- und Abmelden auf der Baustelle",
+    gruppe:"Auf der Baustelle", rollen:["mitarbeiter"], zustand:"geplant" }
+];
+
+const ZUSTAND_TEXT = { laeuft:"Läuft", arbeit:"In Arbeit", geplant:"Geplant" };
+
+/* ======================= ab hier Technik ============================== */
+
+const params = new URLSearchParams(location.search);
+const el = id => document.getElementById(id);
+
+// Rolle: aus URL (?r=), sonst gemerkt, sonst Mitarbeiter.
+// Später kommt sie aus dem Token — n8n liefert sie mit, nicht der Browser.
+let rolle = params.get("r") || localStorage.getItem("mb_rolle") || "mitarbeiter";
+if (!["mitarbeiter","buero","chef"].includes(rolle)) rolle = "mitarbeiter";
+
+const name = params.get("n") || localStorage.getItem("mb_name") || "";
+if (params.get("n")) localStorage.setItem("mb_name", params.get("n"));
+if (params.get("t")) localStorage.setItem("mb_token", params.get("t"));
+
+// Umschalter nur für Büro und Leitung — die Kolonne braucht ihn nicht.
+if (rolle !== "mitarbeiter") {
+  el("rollen").hidden = false;
+  el("rollen").querySelectorAll(".rolle").forEach(b => {
+    b.setAttribute("aria-pressed", String(b.dataset.rolle === rolle));
+    b.addEventListener("click", () => {
+      rolle = b.dataset.rolle;
+      localStorage.setItem("mb_rolle", rolle);
+      el("rollen").querySelectorAll(".rolle").forEach(x =>
+        x.setAttribute("aria-pressed", String(x.dataset.rolle === rolle)));
+      zeichne();
+    });
+  });
+}
+localStorage.setItem("mb_rolle", rolle);
+
+el("begruessung").textContent = name ? "Moin " + name : "Übersicht";
+
+function sichtbar(w){
+  if (!w.rollen.includes(rolle)) return false;
+  // Mitarbeiter sehen nur, was wirklich läuft
+  if (rolle === "mitarbeiter" && w.zustand !== "laeuft") return false;
+  return true;
+}
+
+function zeichne(){
+  const liste = WERKZEUGE.filter(sichtbar);
+  const ziel = el("inhalt");
+  ziel.innerHTML = "";
+
+  if (!liste.length) {
+    ziel.innerHTML = '<div class="leer">Noch nichts freigegeben. Die Werkzeuge kommen über den QR-Code auf der Baustelle.</div>';
+    el("fuss").textContent = "";
+    return;
+  }
+
+  const gruppen = [...new Set(liste.map(w => w.gruppe))];
+  gruppen.forEach(g => {
+    const h = document.createElement("h2");
+    h.className = "gruppe-titel";
+    h.textContent = g;
+    ziel.appendChild(h);
+
+    const gitter = document.createElement("div");
+    gitter.className = "gitter";
+
+    liste.filter(w => w.gruppe === g).forEach(w => {
+      const offen = w.zustand === "laeuft";
+      const k = document.createElement(offen ? "a" : "div");
+      k.className = "kachel" + (offen ? "" : " gesperrt");
+      if (offen) k.href = w.datei;
+
+      const n = document.createElement("div");
+      n.className = "kachel-name"; n.textContent = w.name;
+
+      const t = document.createElement("div");
+      t.className = "kachel-text"; t.textContent = w.text;
+
+      const m = document.createElement("span");
+      m.className = "marke " + w.zustand;
+      m.textContent = ZUSTAND_TEXT[w.zustand];
+
+      k.append(n, t, m);
+      gitter.appendChild(k);
+    });
+
+    ziel.appendChild(gitter);
+  });
+
+  const offen = liste.filter(w => w.zustand === "laeuft").length;
+  el("fuss").textContent = rolle === "mitarbeiter"
+    ? ""
+    : offen + " von " + liste.length + " einsatzbereit";
+}
+
+zeichne();
+</script>
+</body>
+</html>
