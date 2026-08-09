@@ -241,6 +241,20 @@ const gateFehler = document.getElementById('gate-fehler');
 let alleZeilen = [];
 let aktiverBlock = BLOECKE[0].key;
 
+// Packt verschiedene mögliche Antwortformen (NocoDB direkt, n8n-Wrapper, o.ä.) aus
+function alsZeilenArray(daten) {
+  if (Array.isArray(daten)) {
+    if (daten.length > 0 && daten[0] && Array.isArray(daten[0].list)) {
+      return daten[0].list;
+    }
+    return daten;
+  }
+  if (daten && Array.isArray(daten.list)) return daten.list;
+  if (daten && Array.isArray(daten.rows)) return daten.rows;
+  if (daten && Array.isArray(daten.data)) return daten.data;
+  return [];
+}
+
 function gespeicherterCode() {
   return localStorage.getItem('auswertung_code') || '';
 }
@@ -255,7 +269,7 @@ async function versuchLaden(code) {
     });
     if (!res.ok) throw new Error('Zugriff verweigert');
     const daten = await res.json();
-    alleZeilen = Array.isArray(daten) ? daten : (daten.rows || daten.data || []);
+    alleZeilen = alsZeilenArray(daten);
     localStorage.setItem('auswertung_code', code);
     gate.style.display = 'none';
     dashboard.style.display = 'block';
