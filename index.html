@@ -307,7 +307,7 @@ const KACHELN = [
    rollen:['meister','inhaber']},
   {gruppe:'baustelle',datei:'statusseite.html',icon:'haken',name:'Freigabe',
    text:'Was der Kunde zu sehen bekommt',
-   rollen:['vorarbeiter','buero','inhaber']},
+   rollen:['vorarbeiter','inhaber']},
   {gruppe:'baustelle',datei:'checkin.html',icon:'pin',name:'Einchecken',
    text:'Baustelle und Kolonne manuell eintragen',
    rollen:['vorarbeiter','inhaber']},
@@ -318,18 +318,25 @@ const KACHELN = [
    rollen:['azubi','geselle','vorarbeiter','meister','inhaber']},
   {gruppe:'geraete',datei:'geraeteuebersicht.html',icon:'regal',name:'Geräteliste',
    text:'Wer hat was, was steht im Lager',
-   rollen:['geselle','vorarbeiter','buero','inhaber']},
+   rollen:['geselle','vorarbeiter','inhaber']},
   {gruppe:'geraete',datei:'vorratskammer.html',icon:'eimer',name:'Vorratskammer',
    text:'Material und Restbestände',marke:'geplant',
-   rollen:['vorarbeiter','buero','inhaber']},
+   rollen:['vorarbeiter','inhaber']},
 
-  // --- Büro (teils domainübergreifend, siehe basis:'buero') ---
+  // --- Büro: bewusst nur die drei fertigen Punkte. Alles andere hier
+  // war Übergangsstand, jetzt aufgeräumt (August 2026). ---
+  {gruppe:'buero',datei:'wer-wohin.html',icon:'diagramm',name:'Kapazitätsplanung',
+   text:'Wer ist wann wo eingeteilt',basis:'buero',
+   rollen:['meister','buero','inhaber']},
+  {gruppe:'buero',datei:'baustellen-pflege.html',icon:'liste',name:'Baustellenpflege',
+   text:'Baustellen anlegen und pflegen',basis:'buero',
+   rollen:['buero','inhaber']},
+  {gruppe:'buero',datei:'https://info.ichbindermaler.de/videofreigabe',icon:'haken',
+   name:'Videofreigabe',text:'Freigabestatus der Kundenvideos',
+   rollen:['buero','inhaber']},
   {gruppe:'buero',datei:'kontakt.html',icon:'stift',name:'Kundenanfrage',
    text:'Kontakt vor Ort aufnehmen',
-   rollen:['geselle','buero','inhaber']},
-  {gruppe:'buero',datei:'wer-wohin.html',icon:'diagramm',name:'Kapazitätsplanung',
-   text:'Wer ist wann wo eingeteilt',basis:'buero',marke:'schutz',
-   rollen:['meister','buero','inhaber']},
+   rollen:['geselle','inhaber']},
   {gruppe:'buero',datei:'controlling.html',icon:'diagramm',name:'Controlling & Baustellen',
    text:'Zahlen und laufende Baustellen auf einen Blick',basis:'buero',marke:'schutz',
    rollen:['meister','inhaber','chef']},
@@ -341,13 +348,13 @@ const KACHELN = [
    rollen:['inhaber','chef']},
   {gruppe:'buero',datei:'wiedervorlage.html',icon:'uhr',name:'Wiedervorlage',
    text:'Aufgaben und Angebote nachfassen',basis:'buero',marke:'geplant',
-   rollen:['meister','buero','inhaber']},
+   rollen:['meister','inhaber']},
   {gruppe:'buero',datei:'anfrage-neu.html',icon:'stift',name:'Neue Anfrage',
    text:'Kundenanfrage aufnehmen',marke:'geplant',
-   rollen:['buero','inhaber']},
+   rollen:['inhaber']},
   {gruppe:'buero',datei:'pflegekarte.html',icon:'karte',name:'Pflegekarte',
    text:'Produktkarte für den Kunden',
-   rollen:['vorarbeiter','buero','inhaber']},
+   rollen:['vorarbeiter','inhaber']},
 
   // --- Team & Lernen ---
   {gruppe:'team',datei:'inspektion-vr.html',icon:'brille',name:'Gesellenweg',
@@ -355,7 +362,7 @@ const KACHELN = [
    rollen:['azubi','inhaber']},
   {gruppe:'team',datei:'mitarbeiter-feedback.html',icon:'sprechblase',name:'Feedback',
    text:'Anonym – kommt ohne Namen an',
-   rollen:['azubi','vorarbeiter','buero','inhaber']},
+   rollen:['azubi','vorarbeiter','inhaber']},
   {gruppe:'team',datei:'weiterbildung.html',icon:'brille',name:'Weiterbildung',
    text:'Joblinge, AsaFlex und mehr',marke:'geplant',
    rollen:['azubi','inhaber']},
@@ -492,6 +499,7 @@ function sym(name, klasse){
    Manche Tools - Controlling, Kapazitätsplanung - liegen aber bewusst im
    privaten buero-Repo hinter Cloudflare Access. Das Feld "basis" steuert das. */
 function kachelZiel(k){
+  if (/^https?:\/\//.test(k.datei)) return k.datei;   // volle externe URL, unverändert
   if (k.basis === 'buero') return CONFIG.BUERO_URL + k.datei;
   return CONFIG.BASIS_URL + k.datei;
 }
