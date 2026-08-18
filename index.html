@@ -131,6 +131,21 @@
   .fuss{padding:8px 0 30px;color:#a8a4ad;font-size:11.5px;text-align:center;letter-spacing:.03em}
 
   /* ---------- Demo ---------- */
+  /* ---------- Rollen-Vorschau (nur für Inhaber) ---------- */
+  .vorschau{padding:0 0 18px}
+  .vorschau-label{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.13em;color:var(--grau);margin:0 0 8px;
+  }
+  .vorschau-knoepfe{display:flex;flex-wrap:wrap;gap:6px}
+  .vorschau-knopf{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+    background:var(--papier-tief);border:1px solid var(--linie);border-radius:999px;
+    padding:7px 14px;cursor:pointer;color:var(--tinte);
+  }
+  .vorschau-knopf[aria-pressed="true"]{background:var(--rot);border-color:var(--rot);color:#fff}
+  .vorschau-knopf:focus-visible{outline:2px solid var(--rot);outline-offset:2px}
+
   .demo{border-top:1px solid var(--linie);padding:20px 0 8px}
   .demo p{margin:0 0 10px;font-size:11px;color:#a8a4ad;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
   .demo-knoepfe{display:flex;flex-wrap:wrap;gap:6px}
@@ -160,6 +175,11 @@
     <p class="unterzeile"><span class="rolle" id="rollenname"></span><span id="datum"></span></p>
   </header>
 
+  <section class="vorschau" id="vorschauLeiste" hidden>
+    <p class="vorschau-label">Ansicht für</p>
+    <div class="vorschau-knoepfe" id="vorschauKnoepfe"></div>
+  </section>
+
   <main id="inhalt"></main>
 
   <section class="demo" id="demoLeiste" hidden>
@@ -182,22 +202,29 @@ const CONFIG = {
   // Baustellen-ID/-Name in der URL (?b=...&bn=...), nicht nur den Mitarbeiter-
   // Token. Kommt, sobald die Einsatzkarte auch die Baustellen-ID liefert,
   // aktuell nur Klartext-Ort. Siehe README.
-  BASIS_URL: ''
+  BASIS_URL: '',
+  BUERO_URL: 'https://buero.ichbindeinmaler.de/'
 };
 
 // Wer eine Baustelle zugewiesen bekommt und die Einsatzkarte sehen soll.
-const EINSATZ_ROLLEN = ['geselle','vorarbeiter','meister'];
+// Meister betreuen meist mehrere Baustellen gleichzeitig - für die passt
+// "eine Baustelle, ein Ort" nicht. Azubis dagegen wie Gesellen fest zugeteilt.
+const EINSATZ_ROLLEN = ['geselle','vorarbeiter','azubi'];
 
 const ROLLEN = {
-  geselle:{name:'Geselle'}, vorarbeiter:{name:'Vorarbeiter'},
-  meister:{name:'Meister'}, inhaber:{name:'Inhaber'}, buero:{name:'Büro'}
+  azubi:{name:'Azubi'}, geselle:{name:'Geselle'}, vorarbeiter:{name:'Vorarbeiter'},
+  meister:{name:'Meister'}, inhaber:{name:'Inhaber'}, buero:{name:'Büro'},
+  chef:{name:'Chef'}
 };
 
-/* Die eine Sache, die diese Rolle am häufigsten anklickt. */
+/* Die eine Sache, die diese Rolle am häufigsten anklickt.
+   Geselle/Azubi: kein "Einchecken" mehr nötig - die Einsatzkarte oben zeigt
+   das automatisch (heute/morgen, Ort, Kollegen), dafür braucht's keine
+   eigene Kachel mehr, siehe EINSATZ_ROLLEN. */
 const HAUPTAKTION = {
-  geselle:'checkin.html', vorarbeiter:'protokoll.html',
+  azubi:'geraetecheck.html', geselle:'video-upload.html', vorarbeiter:'protokoll.html',
   meister:'inspektion-vob.html', inhaber:'controlling.html',
-  buero:'anfrage-neu.html'
+  buero:'anfrage-neu.html', chef:'controlling.html'
 };
 
 const GRUPPEN = [
@@ -207,42 +234,88 @@ const GRUPPEN = [
   {id:'team',      titel:'Team & Lernen'}
 ];
 
+/* =========================================================================
+   KACHEL-KATALOG - Stand August 2026, pro Rolle neu abgebildet.
+   Vorarbeiter und Büro sind hier noch NICHT final festgelegt (Farbi steht
+   das noch aus) - Kacheln für diese beiden Rollen sind Übergangsstand aus
+   der vorherigen Fassung, keine bewusste Entscheidung.
+   ========================================================================= */
 const KACHELN = [
-  {gruppe:'baustelle',datei:'checkin.html',icon:'pin',name:'Einchecken',
-   text:'Baustelle und Kolonne für heute',rollen:['geselle','vorarbeiter','meister','inhaber']},
-  {gruppe:'baustelle',datei:'baustellendoku.html',icon:'kamera',name:'Fotos',
-   text:'Knipsen und ablegen',rollen:['geselle','vorarbeiter','meister','inhaber']},
-  {gruppe:'baustelle',datei:'protokoll.html',icon:'liste',name:'Protokoll',
-   text:'Baustellenprotokoll ausfüllen',rollen:['vorarbeiter','meister','inhaber'],marke:'offen'},
+  // --- Baustelle ---
+  {gruppe:'baustelle',datei:'video-upload.html',icon:'kamera',name:'Foto/Video',
+   text:'Direkt hochladen, landet automatisch in der Cloud',
+   rollen:['geselle','meister','inhaber']},
+  {gruppe:'baustelle',datei:'protokoll.html',icon:'liste',name:'Baustellenprotokoll',
+   text:'Leistungen, Material, Bemerkungen',marke:'arbeit',
+   rollen:['geselle','meister','inhaber']},
+  {gruppe:'baustelle',datei:'videofreigabe.html',icon:'haken',name:'Videofreigabe',
+   text:'Aufnahme zur Freigabe einreichen',marke:'geplant',
+   rollen:['geselle','inhaber']},
   {gruppe:'baustelle',datei:'inspektion-vob.html',icon:'lupe',name:'VOB-Aufnahme',
-   text:'Untergrund prüfen, Bedenken anmelden',rollen:['meister','inhaber']},
+   text:'Untergrund prüfen, Bedenken anmelden',
+   rollen:['meister','inhaber']},
   {gruppe:'baustelle',datei:'statusseite.html',icon:'haken',name:'Freigabe',
-   text:'Was der Kunde zu sehen bekommt',rollen:['vorarbeiter','meister','inhaber','buero']},
+   text:'Was der Kunde zu sehen bekommt',
+   rollen:['vorarbeiter','buero','inhaber']},
+  {gruppe:'baustelle',datei:'checkin.html',icon:'pin',name:'Einchecken',
+   text:'Baustelle und Kolonne manuell eintragen',
+   rollen:['vorarbeiter','inhaber']},
 
+  // --- Geräte & Material ---
   {gruppe:'geraete',datei:'geraetecheck.html',icon:'werkzeug',name:'Gerät melden',
-   text:'QR scannen, Zustand melden',rollen:['geselle','vorarbeiter','meister','inhaber']},
+   text:'QR scannen, Zustand melden',
+   rollen:['azubi','geselle','vorarbeiter','meister','inhaber']},
   {gruppe:'geraete',datei:'geraeteuebersicht.html',icon:'regal',name:'Geräteliste',
-   text:'Wer hat was, was steht im Lager',rollen:['vorarbeiter','meister','inhaber','buero']},
+   text:'Wer hat was, was steht im Lager',
+   rollen:['geselle','vorarbeiter','buero','inhaber']},
   {gruppe:'geraete',datei:'vorratskammer.html',icon:'eimer',name:'Vorratskammer',
-   text:'Material und Restbestände',rollen:['vorarbeiter','meister','inhaber','buero'],marke:'geplant'},
+   text:'Material und Restbestände',marke:'geplant',
+   rollen:['vorarbeiter','buero','inhaber']},
 
-  {gruppe:'buero',datei:'anfrage-neu.html',icon:'stift',name:'Neue Anfrage',
-   text:'Kundenanfrage aufnehmen',rollen:['buero','meister','inhaber'],marke:'geplant'},
+  // --- Büro (teils domainübergreifend, siehe basis:'buero') ---
+  {gruppe:'buero',datei:'kontakt.html',icon:'stift',name:'Kundenanfrage',
+   text:'Kontakt vor Ort aufnehmen',
+   rollen:['geselle','buero','inhaber']},
+  {gruppe:'buero',datei:'wer-wohin.html',icon:'diagramm',name:'Kapazitätsplanung',
+   text:'Wer ist wann wo eingeteilt',basis:'buero',marke:'schutz',
+   rollen:['meister','buero','inhaber']},
+  {gruppe:'buero',datei:'controlling.html',icon:'diagramm',name:'Controlling & Baustellen',
+   text:'Zahlen und laufende Baustellen auf einen Blick',basis:'buero',marke:'schutz',
+   rollen:['meister','inhaber','chef']},
+  {gruppe:'buero',datei:'kontouebersicht.html',icon:'diagramm',name:'Kontoübersicht',
+   text:'Kontostand und Umsätze',basis:'buero',marke:'geplant',
+   rollen:['inhaber','chef']},
+  {gruppe:'buero',datei:'depotuebersicht.html',icon:'diagramm',name:'Depotübersicht',
+   text:'Wertpapierdepot im Blick',basis:'buero',marke:'geplant',
+   rollen:['inhaber','chef']},
   {gruppe:'buero',datei:'wiedervorlage.html',icon:'uhr',name:'Wiedervorlage',
-   text:'Angebote nachfassen',rollen:['buero','meister','inhaber'],marke:'geplant'},
+   text:'Aufgaben und Angebote nachfassen',basis:'buero',marke:'geplant',
+   rollen:['meister','buero','inhaber']},
+  {gruppe:'buero',datei:'anfrage-neu.html',icon:'stift',name:'Neue Anfrage',
+   text:'Kundenanfrage aufnehmen',marke:'geplant',
+   rollen:['buero','inhaber']},
   {gruppe:'buero',datei:'pflegekarte.html',icon:'karte',name:'Pflegekarte',
-   text:'Produktkarte für den Kunden',rollen:['vorarbeiter','meister','inhaber','buero']},
-  {gruppe:'buero',datei:'controlling.html',icon:'diagramm',name:'Controlling',
-   text:'Zahlen zum Betrieb',rollen:['inhaber'],marke:'schutz'},
+   text:'Produktkarte für den Kunden',
+   rollen:['vorarbeiter','buero','inhaber']},
 
-  {gruppe:'team',datei:'mitarbeiter-feedback.html',icon:'sprechblase',name:'Feedback',
-   text:'Anonym – kommt ohne Namen an',rollen:['geselle','vorarbeiter','meister','inhaber','buero']},
+  // --- Team & Lernen ---
   {gruppe:'team',datei:'inspektion-vr.html',icon:'brille',name:'Gesellenweg',
-   text:'Untergrund erkennen üben',rollen:['geselle','vorarbeiter','meister','inhaber']}
+   text:'Untergrund erkennen üben (VR)',marke:'arbeit',
+   rollen:['azubi','inhaber']},
+  {gruppe:'team',datei:'mitarbeiter-feedback.html',icon:'sprechblase',name:'Feedback',
+   text:'Anonym – kommt ohne Namen an',
+   rollen:['azubi','vorarbeiter','buero','inhaber']},
+  {gruppe:'team',datei:'weiterbildung.html',icon:'brille',name:'Weiterbildung',
+   text:'Joblinge, AsaFlex und mehr',marke:'geplant',
+   rollen:['azubi','inhaber']},
+  {gruppe:'team',datei:'ausbildungsleitfaden.html',icon:'liste',name:'Ausbildungsleitfaden',
+   text:'Bisher nur Gerätecheck aktiv',marke:'geplant',
+   rollen:['azubi','inhaber']}
 ];
 
 const MARKEN = {
   offen:{text:'3 offen',klasse:'marke-offen'},
+  arbeit:{text:'in Arbeit',klasse:'marke-offen'},
   geplant:{text:'geplant',klasse:'marke-geplant'},
   schutz:{text:'geschützt',klasse:'marke-schutz'}
 };
@@ -271,7 +344,8 @@ const DEMO_MITARBEITER = {
   'm4x1':{vorname:'Uli',rolle:'buero'},
   'd8p2':{vorname:'Jonas',rolle:'geselle'},
   'r5t7':{vorname:'Marco',rolle:'vorarbeiter'},
-  'w9q4':{vorname:'Stefan',rolle:'meister'}
+  'w9q4':{vorname:'Stefan',rolle:'meister'},
+  'z3n6':{vorname:'Alex',rolle:'azubi'}
 };
 
 /* Wo bin ich heute/morgen, wer kommt mit - separater, leiser Aufruf,
@@ -363,9 +437,17 @@ function sym(name, klasse){
   return `<svg class="${klasse}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||''}</svg>`;
 }
 
+/* Kacheln zeigen normalerweise auf eine Datei im selben Repo (baustelle).
+   Manche Tools - Controlling, Kapazitätsplanung - liegen aber bewusst im
+   privaten buero-Repo hinter Cloudflare Access. Das Feld "basis" steuert das. */
+function kachelZiel(k){
+  if (k.basis === 'buero') return CONFIG.BUERO_URL + k.datei;
+  return CONFIG.BASIS_URL + k.datei;
+}
+
 function zeileHtml(k){
   const m = k.marke ? MARKEN[k.marke] : null;
-  return `<a class="zeile" href="${CONFIG.BASIS_URL + k.datei}">
+  return `<a class="zeile" href="${kachelZiel(k)}">
     ${sym(k.icon,'sym')}
     <span class="zeile-text">
       <span class="zeile-name">${k.name}</span>
@@ -377,7 +459,7 @@ function zeileHtml(k){
 }
 
 function hauptHtml(k){
-  return `<a class="haupt auf" href="${CONFIG.BASIS_URL + k.datei}" style="animation-delay:.06s">
+  return `<a class="haupt auf" href="${kachelZiel(k)}" style="animation-delay:.06s">
     ${sym(k.icon,'')}
     <span class="haupt-text">
       <span class="haupt-name">${k.name}</span>
@@ -387,13 +469,44 @@ function hauptHtml(k){
   </a>`;
 }
 
+// Wer wirklich eingeloggt ist, bleibt immer Fabian - nur die Ansicht wechselt.
+// Ausschließlich echte Inhaber dürfen andere Rollen vorschauen, damit niemand
+// aus Versehen eine fremde Ansicht als seine eigene hält.
+let vorschauRolle = null;
+
 function zeichnen(person){
   aktuell = person;
   $('#gruss').innerHTML = begruessung(person.vorname);
-  $('#rollenname').textContent = (ROLLEN[person.rolle]||{name:person.rolle}).name;
   $('#datum').textContent = ' · ' + datumText();
 
-  const meine = KACHELN.filter(k => k.rollen.includes(person.rolle));
+  if (person.rolle === 'inhaber'){
+    vorschauRolle = vorschauRolle || person.rolle;
+    $('#vorschauLeiste').hidden = false;
+    vorschauKnoepfeZeichnen();
+  } else {
+    vorschauRolle = person.rolle;
+    $('#vorschauLeiste').hidden = true;
+  }
+
+  inhaltZeichnen();
+}
+
+function vorschauKnoepfeZeichnen(){
+  const box = $('#vorschauKnoepfe');
+  box.innerHTML = Object.entries(ROLLEN).map(([schluessel,r]) =>
+    `<button class="vorschau-knopf" type="button" data-rolle="${schluessel}"
+      aria-pressed="${schluessel===vorschauRolle}">${r.name}</button>`).join('');
+  box.querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => { vorschauRolle = b.dataset.rolle; inhaltZeichnen(); }));
+}
+
+function inhaltZeichnen(){
+  const rolle = vorschauRolle;
+  $('#rollenname').textContent = rolle === aktuell.rolle
+    ? (ROLLEN[rolle]||{name:rolle}).name
+    : `Vorschau: ${(ROLLEN[rolle]||{name:rolle}).name}`;
+
+  const meine = KACHELN.filter(k => k.rollen.includes(rolle));
   const inhalt = $('#inhalt');
 
   if (!meine.length){
@@ -403,10 +516,10 @@ function zeichnen(person){
     return;
   }
 
-  const hauptDatei = HAUPTAKTION[person.rolle];
+  const hauptDatei = HAUPTAKTION[rolle];
   const haupt = meine.find(k => k.datei === hauptDatei);
   const rest  = meine.filter(k => k !== haupt);
-  const zeigtEinsatz = EINSATZ_ROLLEN.includes(person.rolle);
+  const zeigtEinsatz = EINSATZ_ROLLEN.includes(rolle);
 
   let html = zeigtEinsatz ? einsatzKarteHtml() : '';
   html += haupt ? hauptHtml(haupt) : '';
@@ -425,7 +538,7 @@ function zeichnen(person){
     einsatzAnsicht = 'heute';
     document.querySelectorAll('.einsatz-umschalter button').forEach(b =>
       b.addEventListener('click', () => { einsatzAnsicht = b.dataset.tag; einsatzZeichnen(); }));
-    einsatzDatenLaden(person);
+    einsatzDatenLaden(aktuell);
   }
 
   demoKnoepfeZeichnen();
