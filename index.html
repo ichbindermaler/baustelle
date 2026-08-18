@@ -37,6 +37,7 @@
     --info:#2a5c8a;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}
   html,body{margin:0;padding:0}
   body{
     background:var(--papier);color:var(--tinte);
@@ -139,6 +140,29 @@
   /* ---------- Fuß ---------- */
   .fuss{padding:8px 0 30px;color:#a8a4ad;font-size:11.5px;text-align:center;letter-spacing:.03em}
 
+  /* ---------- Installations-Hinweise ---------- */
+  .install-android,.install-ios{
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border:1px solid var(--linie);border-radius:14px;
+    padding:12px 14px;margin:0 0 16px;
+  }
+  .install-text{font-size:13.5px;flex:1}
+  .install-knopf{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+    background:var(--rot);color:#fff;border:none;border-radius:9px;
+    padding:8px 16px;cursor:pointer;flex:0 0 auto;
+  }
+  .install-knopf:focus-visible{outline:2px solid var(--tinte);outline-offset:2px}
+  .install-schliessen{
+    background:none;border:none;color:var(--grau);font-size:15px;
+    cursor:pointer;padding:4px;flex:0 0 auto;line-height:1;
+  }
+  .install-ios-text{font-size:13.5px;flex:1;line-height:1.5}
+  .install-ios-icon{
+    width:15px;height:15px;stroke:var(--tinte);fill:none;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin:0 1px;
+  }
+
   /* ---------- Demo ---------- */
   /* ---------- Rollen-Vorschau (nur für Inhaber) ---------- */
   .vorschau{padding:0 0 18px}
@@ -190,6 +214,24 @@
   </section>
 
   <main id="inhalt"></main>
+
+  <!-- Android: echter Installieren-Button, erscheint nur wenn Chrome die
+       Voraussetzungen erkennt (Service Worker + Manifest vorhanden) -->
+  <div class="install-android" id="installAndroid" hidden>
+    <span class="install-text">Als App auf dem Handy installieren?</span>
+    <button class="install-knopf" id="installKnopf">Installieren</button>
+    <button class="install-schliessen" id="installAndroidZu" aria-label="Schließen">✕</button>
+  </div>
+
+  <!-- iOS: Safari erlaubt keine automatische Installation, nur die Anleitung -->
+  <div class="install-ios" id="installIos" hidden>
+    <div class="install-ios-text">
+      <strong>Als App speichern:</strong> Teilen-Symbol
+      <svg viewBox="0 0 24 24" class="install-ios-icon" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      antippen, dann „Zum Home-Bildschirm".
+    </div>
+    <button class="install-schliessen" id="installIosZu" aria-label="Schließen">✕</button>
+  </div>
 
   <section class="demo" id="demoLeiste" hidden>
     <p>Demo – zeigt andere Rollen</p>
@@ -599,6 +641,51 @@ async function start(){
   }
 }
 start();
+
+/* =========================================================================
+   INSTALLATION - Android bekommt einen echten Knopf, iOS nur die Anleitung
+   (Apple lässt Webseiten die Installation nicht selbst auslösen).
+   ========================================================================= */
+if ('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Android / Chrome & Co.
+let installEvent = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  installEvent = e;
+  if (!localStorage.getItem('mb_install_android_zu')){
+    document.getElementById('installAndroid').hidden = false;
+  }
+});
+document.getElementById('installKnopf')?.addEventListener('click', async () => {
+  if (!installEvent) return;
+  installEvent.prompt();
+  await installEvent.userChoice;
+  installEvent = null;
+  document.getElementById('installAndroid').hidden = true;
+});
+document.getElementById('installAndroidZu')?.addEventListener('click', () => {
+  document.getElementById('installAndroid').hidden = true;
+  localStorage.setItem('mb_install_android_zu', '1');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installAndroid').hidden = true;
+});
+
+// iOS / Safari - kein automatischer Dialog möglich, nur der Hinweis
+const istIos = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const laeuftSchonAlsApp = window.navigator.standalone === true ||
+  window.matchMedia('(display-mode: standalone)').matches;
+if (istIos && !laeuftSchonAlsApp && !localStorage.getItem('mb_install_ios_zu')){
+  document.getElementById('installIos').hidden = false;
+}
+document.getElementById('installIosZu')?.addEventListener('click', () => {
+  document.getElementById('installIos').hidden = true;
+  localStorage.setItem('mb_install_ios_zu', '1');
+});
 </script>
 </body>
 </html>
