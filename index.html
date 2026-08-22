@@ -141,7 +141,7 @@
   .fuss{padding:8px 0 30px;color:#a8a4ad;font-size:11.5px;text-align:center;letter-spacing:.03em}
 
   /* ---------- Installations-Hinweise ---------- */
-  .install-android,.install-ios{
+  .install-android{
     display:flex;align-items:center;gap:10px;
     background:#fff;border:1px solid var(--linie);border-radius:14px;
     padding:12px 14px;margin:0 0 16px;
@@ -157,11 +157,21 @@
     background:none;border:none;color:var(--grau);font-size:15px;
     cursor:pointer;padding:4px;flex:0 0 auto;line-height:1;
   }
-  .install-ios-text{font-size:13.5px;flex:1;line-height:1.5}
-  .install-ios-icon{
-    width:15px;height:15px;stroke:var(--tinte);fill:none;stroke-width:2;
-    stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin:0 1px;
+
+  .install-ios{
+    background:#fff;border:1px solid var(--linie);border-radius:14px;
+    padding:14px 16px;margin:0 0 16px;
   }
+  .install-ios-kopf{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:14px;margin-bottom:8px;
+  }
+  .install-ios-titel{color:var(--rot);font-family:'Oswald',sans-serif;font-weight:600;font-size:15px}
+  .install-ios-schritte{
+    margin:0;padding-left:20px;font-size:13.5px;line-height:1.6;color:var(--tinte);
+  }
+  .install-ios-schritte li{margin-bottom:2px}
+  .install-ios-schritte li:last-child{margin-bottom:0}
 
   /* ---------- Demo ---------- */
   /* ---------- Rollen-Vorschau (nur für Inhaber) ---------- */
@@ -225,12 +235,16 @@
 
   <!-- iOS: Safari erlaubt keine automatische Installation, nur die Anleitung -->
   <div class="install-ios" id="installIos" hidden>
-    <div class="install-ios-text">
-      <strong>Als App speichern:</strong> Teilen-Symbol
-      <svg viewBox="0 0 24 24" class="install-ios-icon" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
-      antippen, dann „Zum Home-Bildschirm".
+    <div class="install-ios-kopf">
+      <strong class="install-ios-titel">Anleitung zur Maler-App</strong>
+      <button class="install-schliessen" id="installIosZu" aria-label="Schließen">✕</button>
     </div>
-    <button class="install-schliessen" id="installIosZu" aria-label="Schließen">✕</button>
+    <ol class="install-ios-schritte">
+      <li>Unten rechts auf <strong>•••</strong> tippen</li>
+      <li><strong>Teilen</strong> antippen</li>
+      <li>In der untersten Zeile ganz nach rechts wischen, bis <strong>Weitere Funktionen</strong> steht, antippen</li>
+      <li><strong>Zum Home-Bildschirm hinzufügen</strong> antippen</li>
+    </ol>
   </div>
 
   <section class="demo" id="demoLeiste" hidden>
@@ -273,7 +287,7 @@ const ROLLEN = {
    das automatisch (heute/morgen, Ort, Kollegen), dafür braucht's keine
    eigene Kachel mehr, siehe EINSATZ_ROLLEN. */
 const HAUPTAKTION = {
-  azubi:'geraetecheck.html', geselle:'video-upload.html', vorarbeiter:'protokoll.html',
+  azubi:'geraetecheck.html', geselle:'bautagebuch.html', vorarbeiter:'protokoll.html',
   meister:'inspektion-vob.html', inhaber:'controlling.html',
   buero:'anfrage-neu.html', chef:'controlling.html'
 };
@@ -293,11 +307,8 @@ const GRUPPEN = [
    ========================================================================= */
 const KACHELN = [
   // --- Baustelle ---
-  {gruppe:'baustelle',datei:'video-upload.html',icon:'kamera',name:'Foto/Video',
-   text:'Direkt hochladen, landet automatisch in der Cloud',
-   rollen:['geselle','meister','inhaber']},
-  {gruppe:'baustelle',datei:'protokoll.html',icon:'liste',name:'Baustellenprotokoll',
-   text:'Leistungen, Material, Bemerkungen',marke:'arbeit',
+  {gruppe:'baustelle',datei:'bautagebuch.html',icon:'kamera',name:'Bautagebuch',
+   text:'Sprachmemo, Fotos, Protokoll — alles in einem',
    rollen:['geselle','meister','inhaber']},
   {gruppe:'baustelle',datei:'videofreigabe.html',icon:'haken',name:'Videofreigabe',
    text:'Aufnahme zur Freigabe einreichen',marke:'geplant',
@@ -333,6 +344,9 @@ const KACHELN = [
    rollen:['buero','inhaber']},
   {gruppe:'buero',datei:'https://info.ichbindermaler.de/videofreigabe',icon:'haken',
    name:'Videofreigabe',text:'Freigabestatus der Kundenvideos',
+   rollen:['buero','inhaber']},
+  {gruppe:'buero',datei:'was-war-los.html',icon:'liste',name:'Bautagebücher',
+   text:'Berichte einsehen, bei Bedarf zur Bearbeitung freigeben',basis:'buero',
    rollen:['buero','inhaber']},
   {gruppe:'buero',datei:'kontakt.html',icon:'stift',name:'Kundenanfrage',
    text:'Kontakt vor Ort aufnehmen',

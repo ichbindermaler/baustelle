@@ -36,6 +36,24 @@ h1{
 .unterzeile{color:var(--grau);font-size:14px;margin:0 0 26px;}
 
 .eingabe{margin-bottom:18px;}
+.wer{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  background:var(--blatt);border:1px solid var(--linie);border-radius:8px;
+  padding:11px 14px;margin-bottom:18px;font-size:15px;
+}
+.wer #werName{font-family:'Oswald',sans-serif;font-weight:500;font-size:17px;}
+.wer #werRolle{color:var(--grau);font-size:13px;}
+.nachtragHinweis,.baustelleHinweis{
+  font-size:12.5px;margin-top:6px;line-height:1.45;
+}
+.nachtragHinweis{color:var(--pruef);}
+.baustelleHinweis{color:var(--grau);}
+.abwesenheit{
+  background:var(--pruef-bg);border:1px solid #E8D5A3;color:var(--pruef);
+  border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:14px;line-height:1.5;
+}
+select:disabled{opacity:.5;}
+.knopfMikro:disabled{opacity:.35;cursor:not-allowed;}
 .eingabe > label{
   display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;
   letter-spacing:.08em;text-transform:uppercase;color:var(--grau);margin-bottom:6px;
@@ -152,6 +170,13 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
 .feld.breit{grid-column:1 / -1;}
 
 .block{margin-bottom:32px;}
+.stichwortBlock{
+  background:var(--blatt);border:1px solid var(--linie);border-left:3px solid var(--rot);
+  border-radius:6px;padding:14px 16px;margin-bottom:28px;
+}
+.stichwortBlock h2{font-size:13px;margin:0 0 6px;}
+.stichwortHinweis{font-size:11px;font-weight:400;color:var(--grau);text-transform:none;letter-spacing:0;}
+.stichwortZeile{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:14.5px;line-height:1.5;}
 .block > h2{
   font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;
   letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px;padding-bottom:7px;
@@ -234,43 +259,25 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   <h1>Bautagebuch</h1>
   <p class="unterzeile">Erzähl kurz, was heute auf der Baustelle lief. Reine Doku — Stunden laufen weiter über WinWorker.</p>
 
-  <div class="stand verborgen" id="standInfo" style="background:var(--blatt);border:1px solid var(--linie);border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:14px;">
-    <div>Baustelle heute: <b id="standBaustelle"></b></div>
-    <div style="margin-top:3px;">Du bist <b id="standName"></b> <span id="standRolle" style="color:var(--grau);"></span></div>
-    <button type="button" class="knopf" id="standAendern" style="margin-top:10px;padding:6px 14px;font-size:13px;">Angaben ändern</button>
+  <div class="wer" id="wer">
+    <span id="werName">…</span><span id="werRolle"></span>
   </div>
 
-  <div class="ladehinweis verborgen" id="ladeHinweis" style="font-size:13px;color:var(--grau);margin-bottom:14px;">Lade deine Daten …</div>
+  <div class="eingabe">
+    <label for="datum">Für welchen Tag</label>
+    <input type="date" id="datum"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <div class="nachtragHinweis verborgen" id="nachtragHinweis"></div>
+  </div>
 
-  <div id="manuelleEingabe">
-    <div class="eingabe">
-      <label for="baustelle">Baustelle</label>
-      <select id="baustelle">
-        <option value="">— auswählen —</option>
-        <option>WEG Rheinallee 14–18, Hennef</option>
-        <option>Bürohaus Siegtal, Hennef-Geistingen</option>
-        <option>Kita Sonnenblume, Uckerath</option>
-        <option>Wohnhaus Familie Reuter, Stadt Blankenberg</option>
-        <option>Praxis Dr. Kalscheuer, Hennef</option>
-        <option value="neu">Neues Objekt / noch nicht angelegt</option>
-      </select>
-    </div>
+  <div class="abwesenheit verborgen" id="abwesenheit"></div>
 
-    <div class="eingabe">
-      <label for="name">Dein Name</label>
-      <input type="text" id="name" placeholder="Vor- und Nachname" autocomplete="name"
-        style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
-    </div>
-
-    <div class="eingabe">
-      <label for="rolle">Du bist</label>
-      <select id="rolle">
-        <option value="">— auswählen —</option>
-        <option>Geselle</option>
-        <option>Azubi</option>
-        <option>Vorarbeiter</option>
-      </select>
-    </div>
+  <div class="eingabe">
+    <label for="baustelle">Baustelle</label>
+    <select id="baustelle">
+      <option value="">— lädt … —</option>
+    </select>
+    <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
   </div>
 
   <div class="mikro">
@@ -311,9 +318,11 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 <div class="verborgen" id="ansichtProtokoll">
   <div class="leiste">
     <span class="hinweis">Entwurf aus der Sprachmemo — alles hier ist direkt überschreibbar.</span>
+    <button class="knopf" id="neueAufnahme">Nochmal aufnehmen</button>
     <button class="knopf" id="nochmal">Neuer Eintrag</button>
     <button class="knopf" id="allesOk">Prüfstellen bestätigen</button>
-    <button class="knopf primaer" id="drucken">Drucken / als PDF sichern</button>
+    <button class="knopf" id="drucken">Drucken / als PDF sichern</button>
+    <button class="knopf primaer" id="ablegen">Eintrag ablegen</button>
   </div>
 
   <div class="blatt">
@@ -336,6 +345,12 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <div class="feld"><label>Datum</label><div class="wert" contenteditable="true" id="pDatum"></div></div>
       <div class="feld"><label>Name</label><div class="wert" contenteditable="true" id="pWer"></div></div>
       <div class="feld breit"><label>Rolle</label><div class="wert" contenteditable="true" id="pRolle"></div></div>
+    </section>
+
+    <section class="block stichwortBlock">
+      <h2>Stichworte <span class="stichwortHinweis">für WinWorker</span></h2>
+      <div class="fliess stichwortZeile" contenteditable="true" id="pStichworte"></div>
+      <button type="button" class="knopf" id="stichworteKopieren" style="margin-top:10px;">Kopieren</button>
     </section>
 
     <p class="legende verborgen" id="legende">
@@ -389,8 +404,198 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 
 <script>
 /* ===== Einstellungen ===== */
-var WEBHOOK = 'https://n8n.ichbindeinmaler.de/webhook/termin';
-var BUERO_WEBHOOK = 'https://n8n.ichbindeinmaler.de/webhook/buero';
+var WEBHOOK = 'https://n8n.ichbindeinmaler.de/webhook/termin';   // Sprache -> Protokoll
+var BUERO   = 'https://n8n.ichbindeinmaler.de/webhook/buero';    // Stammdaten, Speichern
+
+/* ===== Wer bin ich (Token wie auf der Startseite) ===== */
+var ich = { vorname:'', rolle:'' };
+var alleBaustellen = [];
+var wochenDaten = {};   // kompletter Einsatzplan, alle Wochen
+
+/* Das sind keine Baustellen - für solche Tage braucht es kein Bautagebuch.
+   Muss zu den festen Einträgen in wer-wohin.html passen. */
+var ABWESEND = ['Krank','Urlaub','Schule','Sonstige Abwesenheit','Kurzarbeit'];
+function istAbwesenheit(text){
+  return ABWESEND.some(function(a){
+    return (text||'').toLowerCase().indexOf(a.toLowerCase()) === 0;
+  });
+}
+
+/* Wochenschlüssel wie in wer-wohin.html - muss identisch bleiben,
+   sonst passen die Datensätze nicht zusammen. */
+function mondayOfDate(d){
+  var date = new Date(d);
+  var day = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - day);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function isoWeekNumber(d){
+  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  var dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  var firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
+  return 1 + Math.round((date - firstThursday) / 86400000 / 7);
+}
+function weekKeyOf(monday){
+  var week = isoWeekNumber(monday);
+  var jahr = new Date(monday.getTime() + 3*86400000).getFullYear();
+  return jahr + '-' + String(week).padStart(2,'0');
+}
+
+/* Was stand für diesen Tag im Plan? '' wenn nichts bekannt. */
+function einsatzFuerDatum(iso){
+  if (!iso) return '';
+  var d = new Date(iso + 'T12:00:00');
+  var wt = (d.getDay() + 6) % 7;
+  if (wt > 4) return '';   // Wochenende
+  var tage = ['mo','di','mi','do','fr'];
+  var woche = wochenDaten[weekKeyOf(mondayOfDate(d))];
+  if (!woche || !woche.rows) return '';
+  var zeile = woche.rows.filter(function(r){ return r.name === ich.vorname; })[0];
+  return zeile ? (zeile[tage[wt]] || '') : '';
+}
+
+function heuteIso(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function tokenHolen(){
+  var ausUrl = new URLSearchParams(location.search).get('m');
+  if (ausUrl){ localStorage.setItem('mb_token', ausUrl); return ausUrl; }
+  return localStorage.getItem('mb_token');
+}
+
+function starteSeite(){
+  $('datum').value = heuteIso();
+  $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
+  $('datum').addEventListener('change', datumGewechselt);
+
+  var token = tokenHolen();
+  if (!token){
+    $('werName').textContent = 'Kein Zugang';
+    $('werRolle').textContent = 'Bitte den persönlichen Link aus dem Büro benutzen';
+    return;
+  }
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'mitarbeiter_laden', token: token })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var p = Array.isArray(d) ? d[0] : d;
+    if (!p || !p.vorname) throw new Error('unbekannt');
+    ich.vorname = p.vorname;
+    ich.rolle = p.rolle || '';
+    $('werName').textContent = ich.vorname;
+    $('werRolle').textContent = ich.rolle ? '· ' + ich.rolle : '';
+    baustellenLaden();
+    einsatzLaden();
+  })
+  .catch(function(){
+    $('werName').textContent = 'Zugang nicht erkannt';
+    $('werRolle').textContent = 'Bitte im Büro melden';
+  });
+}
+
+function baustellenLaden(){
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'baustellen_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var liste = (d && d.baustellen) ? d.baustellen : [];
+    // Abgeschlossene Baustellen taugen nicht mehr für neue Einträge
+    alleBaustellen = liste
+      .filter(function(b){ return b.status !== 'abgeschlossen'; })
+      .map(function(b){ return b.bezeichnung; })
+      .filter(Boolean);
+    baustellenZeichnen();
+  })
+  .catch(function(){
+    $('baustelleHinweis').textContent = 'Baustellenliste konnte nicht geladen werden — bitte von Hand eintragen.';
+    $('baustelleHinweis').classList.remove('verborgen');
+    baustellenZeichnen();
+  });
+}
+
+function einsatzLaden(){
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'einsatzplan_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var e = Array.isArray(d) ? d[0] : d;
+    wochenDaten = (e && e.weeks) ? e.weeks : {};
+    baustellenZeichnen();
+  })
+  .catch(function(){});
+}
+
+function baustellenZeichnen(){
+  var gewaehlt = $('baustelle').value;
+  var geplant = einsatzFuerDatum($('datum').value);
+  var abwesend = istAbwesenheit(geplant);
+
+  // Abwesenheiten gehören nicht in die Baustellenliste
+  var vorschlag = abwesend ? '' : geplant;
+  var namen = alleBaustellen.filter(function(n){ return !istAbwesenheit(n); });
+  if (vorschlag && namen.indexOf(vorschlag) === -1) namen.unshift(vorschlag);
+
+  $('baustelle').innerHTML =
+    '<option value="">— auswählen —</option>' +
+    namen.map(function(n){ return '<option>' + escape(n) + '</option>'; }).join('') +
+    '<option value="neu">Neues Objekt / noch nicht angelegt</option>';
+
+  $('baustelleHinweis').classList.add('verborgen');
+
+  if (abwesend){
+    // Kein Bautagebuch nötig - Formular sperren statt jemanden
+    // versehentlich einen Eintrag für seinen Urlaubstag schreiben zu lassen
+    $('baustelle').value = '';
+    $('baustelle').disabled = true;
+    $('abwesenheit').textContent = 'Laut Einsatzplan: ' + geplant + '. Für diesen Tag braucht es kein Bautagebuch.';
+    $('abwesenheit').classList.remove('verborgen');
+    $('knopfMikro').disabled = true;
+    $('senden').disabled = true;
+    return;
+  }
+
+  $('baustelle').disabled = false;
+  $('knopfMikro').disabled = false;
+  $('abwesenheit').classList.add('verborgen');
+
+  if (gewaehlt && namen.indexOf(gewaehlt) !== -1){
+    $('baustelle').value = gewaehlt;
+  } else if (vorschlag){
+    $('baustelle').value = vorschlag;
+    $('baustelleHinweis').textContent = 'Aus dem Einsatzplan übernommen — bei Bedarf ändern.';
+    $('baustelleHinweis').classList.remove('verborgen');
+  } else if ($('datum').value !== heuteIso()){
+    $('baustelle').value = '';
+    $('baustelleHinweis').textContent = 'Für diesen Tag liegt kein Einsatzplan vor — bitte selbst auswählen.';
+    $('baustelleHinweis').classList.remove('verborgen');
+  }
+  pruefeBereit();
+}
+
+function datumGewechselt(){
+  var gewaehlt = $('datum').value;
+  if (gewaehlt && gewaehlt !== heuteIso()){
+    var d = new Date(gewaehlt + 'T12:00:00');
+    $('nachtragHinweis').textContent = 'Nachtrag für ' +
+      d.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'long' }) + '.';
+    $('nachtragHinweis').classList.remove('verborgen');
+  } else {
+    $('nachtragHinweis').classList.add('verborgen');
+  }
+  $('baustelle').value = '';   // Auswahl vom vorherigen Tag nicht mitschleppen
+  baustellenZeichnen();
+}
 
 /* ===== Hilfsfunktionen ===== */
 function $(id){ return document.getElementById(id); }
@@ -405,95 +610,6 @@ function escape(s){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-/* ===== Auto-Laden über Token aus dem WhatsApp-Link (?m=) ===== */
-function grossAnfang(s){
-  s = String(s || '');
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-}
-
-function zeigeManuelleEingabe(){
-  $('ladeHinweis').classList.add('verborgen');
-  $('standInfo').classList.add('verborgen');
-  $('manuelleEingabe').classList.remove('verborgen');
-  pruefeBereit();
-}
-
-function uebernehmeStand(baustelleName, vorname, rolleName){
-  // Fuellt die eigentlichen Felder (werden von Absenden/pruefeBereit genutzt),
-  // zeigt aber nur die kompakte Bestaetigungszeile an statt der drei Eingaben.
-  $('name').value = vorname || '';
-  $('rolle').value = ['Geselle','Azubi','Vorarbeiter'].includes(rolleName) ? rolleName : '';
-  if (rolleName && !['Geselle','Azubi','Vorarbeiter'].includes(rolleName)) {
-    // Rolle kam von NocoDB, passt aber zu keiner festen Option - trotzdem als Wert setzen
-    var opt = document.createElement('option');
-    opt.textContent = rolleName;
-    $('rolle').appendChild(opt);
-    $('rolle').value = rolleName;
-  }
-
-  if (baustelleName) {
-    var vorhanden = Array.prototype.some.call($('baustelle').options, function(o){ return o.value === baustelleName; });
-    if (!vorhanden) {
-      var opt2 = document.createElement('option');
-      opt2.textContent = baustelleName;
-      $('baustelle').appendChild(opt2);
-    }
-    $('baustelle').value = baustelleName;
-  }
-
-  $('ladeHinweis').classList.add('verborgen');
-  $('standBaustelle').textContent = baustelleName || '— heute keine Zuordnung im Einsatzplan —';
-  $('standName').textContent = vorname || '';
-  $('standRolle').textContent = rolleName ? '(' + rolleName + ')' : '';
-  $('standInfo').classList.remove('verborgen');
-  $('manuelleEingabe').classList.add('verborgen');
-  pruefeBereit();
-}
-
-$('standAendern').addEventListener('click', zeigeManuelleEingabe);
-
-function autoLaden(token){
-  $('ladeHinweis').classList.remove('verborgen');
-
-  fetch(BUERO_WEBHOOK, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aktion: 'mitarbeiter_laden', token: token })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(person){
-    var vorname = person && person.vorname;
-    if (!vorname) {
-      zeigeManuelleEingabe();
-      return;
-    }
-    var rolle = grossAnfang(person.rolle);
-
-    return fetch(BUERO_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aktion: 'einsatzplan_tage', mitarbeiter_spitzname: vorname })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(plan){
-      var ort = plan && plan.heute && plan.heute.ort ? plan.heute.ort : '';
-      uebernehmeStand(ort, vorname, rolle);
-    });
-  })
-  .catch(function(){
-    zeigeManuelleEingabe();
-  });
-}
-
-(function(){
-  var token = new URLSearchParams(location.search).get('m');
-  if (token) {
-    autoLaden(token);
-  } else {
-    zeigeManuelleEingabe();
-  }
-})();
-
 /* ===== Aufnahme ===== */
 var recorder = null, brocken = [], audioBlob = null, audioMime = '';
 var start = 0, ticker = null, sekunden = 0;
@@ -505,6 +621,7 @@ function uhrText(s){
 }
 
 $('knopfMikro').addEventListener('click', function(){
+  if ($('knopfMikro').disabled) return;
   if(recorder && recorder.state === 'recording'){ stoppen(); } else { starten(); }
 });
 
@@ -586,11 +703,9 @@ function verkleinern(datei, fertig){
 
 /* ===== Absenden ===== */
 function pruefeBereit(){
-  $('senden').disabled = !(audioBlob && $('baustelle').value && $('name').value.trim());
+  $('senden').disabled = !(audioBlob && $('baustelle').value && ich.vorname);
 }
 $('baustelle').addEventListener('change', pruefeBereit);
-$('name').addEventListener('input', pruefeBereit);
-$('rolle').addEventListener('change', pruefeBereit);
 
 function fehlerZeigen(text){
   $('fehler').textContent = text;
@@ -620,8 +735,9 @@ $('senden').addEventListener('click', function(){
         dauer: sekunden,
         fotos: fotos.length,
         baustelle: $('baustelle').value,
-        mitarbeiter: $('name').value.trim(),
-        rolle: $('rolle').value,
+        mitarbeiter: ich.vorname,
+        rolle: ich.rolle,
+        datum: $('datum').value,
         notiz: $('notiz').value
       })
     })
@@ -644,6 +760,9 @@ $('senden').addEventListener('click', function(){
 
 /* ===== Protokoll aufbauen ===== */
 function aufbauen(d){
+  letztesProtokoll = d;
+  var knopf = $('ablegen');
+  if (knopf){ knopf.disabled = false; knopf.textContent = 'Eintrag ablegen'; knopf.classList.add('primaer'); }
   var p = d.protokoll;
   var jetzt = new Date();
 
@@ -660,6 +779,7 @@ function aufbauen(d){
     jetzt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr';
   $('pWer').textContent = d.mitarbeiter || '';
   $('pRolle').textContent = d.rolle || '';
+  $('pStichworte').textContent = p.stichworte || '';
 
   var t = Array.isArray(p.taetigkeiten) ? p.taetigkeiten : [String(p.taetigkeiten || '')];
   $('pGespraech').innerHTML = t.map(function(a){ return '<p>' + escape(a) + '</p>'; }).join('');
@@ -741,18 +861,119 @@ $('allesOk').addEventListener('click', function(){
   document.querySelectorAll('.pruefen').forEach(function(el){ el.classList.add('ok'); });
 });
 $('drucken').addEventListener('click', function(){ window.print(); });
-$('nochmal').addEventListener('click', function(){
+
+$('stichworteKopieren').addEventListener('click', function(){
+  var text = $('pStichworte').innerText.trim();
+  if (!text) return;
+  var knopf = $('stichworteKopieren');
+  navigator.clipboard.writeText(text).then(function(){
+    var alt = knopf.textContent;
+    knopf.textContent = 'Kopiert ✓';
+    setTimeout(function(){ knopf.textContent = alt; }, 1500);
+  }).catch(function(){
+    alert('Kopieren hat nicht geklappt — bitte den Text von Hand markieren.');
+  });
+});
+
+/* ===== Eintrag in NocoDB ablegen ===== */
+var letztesProtokoll = null;
+var legtGerade = false;
+
+$('ablegen').addEventListener('click', function(){
+  if (legtGerade || !letztesProtokoll) return;
+  legtGerade = true;
+  var knopf = $('ablegen');
+  knopf.disabled = true;
+  knopf.textContent = 'Wird abgelegt …';
+
+  var p = letztesProtokoll.protokoll || {};
+
+  // Wichtig: Wer im gedruckten Protokoll etwas korrigiert hat (Baustelle,
+  // Name, Rolle können nach der Transkription von Hand nachgebessert
+  // werden), dessen Korrektur soll auch wirklich gespeichert werden.
+  // Deshalb liest alles unten aus dem geprüften Protokoll, nicht mehr aus
+  // den ursprünglichen Formularfeldern - eine Quelle der Wahrheit.
+  var baustelleFinal = $('pObjekt').textContent.trim() || $('baustelle').value;
+  var nameFinal = $('pWer').textContent.trim() || ich.vorname;
+  var rolleFinal = $('pRolle').textContent.trim() || ich.rolle;
+
+  var materialZeilen = Array.prototype.map.call(
+    document.querySelectorAll('#pTechnik tr'),
+    function(tr){
+      var th = tr.querySelector('th'), td = tr.querySelector('td');
+      return (th ? th.textContent : '') + ': ' + (td ? td.textContent.trim() : '');
+    }).join('\n');
+
+  var bildunterschriften = Array.prototype.map.call(
+    document.querySelectorAll('#pFotos figcaption span'),
+    function(s, i){ return 'Foto ' + (i+1) + ': ' + s.textContent.trim(); }).join('\n');
+
+  var unsicherListe = Array.isArray(p.unsicher) ? p.unsicher.filter(Boolean) : [];
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      aktion: 'bautagebuch_speichern',
+      bericht: {
+        datum: $('datum').value,                    // welcher Arbeitstag - kommt bewusst aus dem Datumsfeld, nicht aus der Anzeige
+        baustelle_text: baustelleFinal,
+        mitarbeiter_spitzname: nameFinal,
+        rolle: rolleFinal,
+        taetigkeiten: $('pGespraech').innerText.trim(),
+        stichworte: $('pStichworte').innerText.trim(),
+        material: materialZeilen,
+        auffaelligkeiten: $('pAuffaellig').innerText.trim(),
+        zeitschaetzung: $('pZeit').innerText.trim(),
+        transkript: letztesProtokoll.transkript || '',
+        notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
+        fotos_anzahl: fotos.length,
+        aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
+        unsichere_begriffe: unsicherListe.join(', '),
+        geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
+        abgeschlossen: true
+      }
+    })
+  })
+  .then(function(r){ if(!r.ok) throw new Error('Status ' + r.status); return r.json(); })
+  .then(function(){
+    knopf.textContent = 'Abgelegt ✓';
+    knopf.classList.remove('primaer');
+  })
+  .catch(function(e){
+    knopf.disabled = false;
+    knopf.textContent = 'Nochmal versuchen';
+    alert('Konnte nicht abgelegt werden: ' + e.message + '\nDas Protokoll bleibt hier stehen, einfach nochmal antippen.');
+  })
+  .then(function(){ legtGerade = false; });
+});
+
+$('neueAufnahme').addEventListener('click', function(){
+  // Für die Fälle, wo die Aufnahme misslingt oder das Protokoll nicht passt -
+  // Baustelle und Datum bleiben stehen, nur Aufnahme/Fotos/Protokoll fliegen raus.
+  // Erspart bei zwei, drei Versuchen das erneute Einstellen, besonders bei Nachträgen.
   audioBlob = null; fotos = []; sekunden = 0;
+  letztesProtokoll = null;
   $('uhr').textContent = '0:00';
   $('mikroText').textContent = 'Antippen zum Starten';
-  $('notiz').value = '';
-  $('baustelle').value = '';
-  // Name und Rolle bleiben bewusst stehen, falls dieselbe Person
-  // gleich noch einen Eintrag fuer eine andere Baustelle macht.
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
   $('senden').disabled = true;
   zeige('ansichtAufnahme');
 });
+
+$('nochmal').addEventListener('click', function(){
+  audioBlob = null; fotos = []; sekunden = 0;
+  letztesProtokoll = null;
+  $('uhr').textContent = '0:00';
+  $('mikroText').textContent = 'Antippen zum Starten';
+  $('notiz').value = '';
+  $('datum').value = heuteIso();
+  datumGewechselt();
+  document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
+  $('senden').disabled = true;
+  zeige('ansichtAufnahme');
+});
+
+starteSeite();
 </script>
 </body>
 </html>
