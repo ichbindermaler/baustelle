@@ -42,7 +42,6 @@ h1{
   padding:11px 14px;margin-bottom:18px;font-size:15px;
 }
 .wer #werName{font-family:'Oswald',sans-serif;font-weight:500;font-size:17px;}
-.wer #werRolle{color:var(--grau);font-size:13px;}
 .nachtragHinweis,.baustelleHinweis{
   font-size:12.5px;margin-top:6px;line-height:1.45;
 }
@@ -260,7 +259,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   <p class="unterzeile">Erzähl kurz, was heute auf der Baustelle lief. Reine Doku — Stunden laufen weiter über WinWorker.</p>
 
   <div class="wer" id="wer">
-    <span id="werName">…</span><span id="werRolle"></span>
+    <span id="werName">…</span>
   </div>
 
   <div class="eingabe">
@@ -343,8 +342,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <section class="stamm">
       <div class="feld breit"><label>Baustelle</label><div class="wert" contenteditable="true" id="pObjekt"></div></div>
       <div class="feld"><label>Datum</label><div class="wert" contenteditable="true" id="pDatum"></div></div>
-      <div class="feld"><label>Name</label><div class="wert" contenteditable="true" id="pWer"></div></div>
-      <div class="feld breit"><label>Rolle</label><div class="wert" contenteditable="true" id="pRolle"></div></div>
+      <div class="feld breit"><label>Name</label><div class="wert" contenteditable="true" id="pWer"></div></div>
     </section>
 
     <section class="block stichwortBlock">
@@ -474,8 +472,7 @@ function starteSeite(){
 
   var token = tokenHolen();
   if (!token){
-    $('werName').textContent = 'Kein Zugang';
-    $('werRolle').textContent = 'Bitte den persönlichen Link aus dem Büro benutzen';
+    $('werName').textContent = 'Kein Zugang – bitte den persönlichen Link aus dem Büro benutzen';
     return;
   }
 
@@ -490,13 +487,11 @@ function starteSeite(){
     ich.vorname = p.vorname;
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
-    $('werRolle').textContent = ich.rolle ? '· ' + ich.rolle : '';
     baustellenLaden();
     einsatzLaden();
   })
   .catch(function(){
-    $('werName').textContent = 'Zugang nicht erkannt';
-    $('werRolle').textContent = 'Bitte im Büro melden';
+    $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
 }
 
@@ -778,7 +773,6 @@ function aufbauen(d){
   $('pDatum').textContent = jetzt.toLocaleDateString('de-DE') + ', ' +
     jetzt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr';
   $('pWer').textContent = d.mitarbeiter || '';
-  $('pRolle').textContent = d.rolle || '';
   $('pStichworte').textContent = p.stichworte || '';
 
   var t = Array.isArray(p.taetigkeiten) ? p.taetigkeiten : [String(p.taetigkeiten || '')];
@@ -889,13 +883,12 @@ $('ablegen').addEventListener('click', function(){
   var p = letztesProtokoll.protokoll || {};
 
   // Wichtig: Wer im gedruckten Protokoll etwas korrigiert hat (Baustelle,
-  // Name, Rolle können nach der Transkription von Hand nachgebessert
-  // werden), dessen Korrektur soll auch wirklich gespeichert werden.
-  // Deshalb liest alles unten aus dem geprüften Protokoll, nicht mehr aus
-  // den ursprünglichen Formularfeldern - eine Quelle der Wahrheit.
+  // Name können nach der Transkription von Hand nachgebessert werden),
+  // dessen Korrektur soll auch wirklich gespeichert werden. Rolle wird
+  // nicht mehr angezeigt/editiert, kommt direkt aus dem Mitarbeiter-Token.
   var baustelleFinal = $('pObjekt').textContent.trim() || $('baustelle').value;
   var nameFinal = $('pWer').textContent.trim() || ich.vorname;
-  var rolleFinal = $('pRolle').textContent.trim() || ich.rolle;
+  var rolleFinal = ich.rolle;
 
   var materialZeilen = Array.prototype.map.call(
     document.querySelectorAll('#pTechnik tr'),
