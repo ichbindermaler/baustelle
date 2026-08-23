@@ -36,6 +36,54 @@ h1{
 .unterzeile{color:var(--grau);font-size:14px;margin:0 0 26px;}
 
 .eingabe{margin-bottom:18px;}
+
+.modusUmschalter{display:flex;gap:8px;margin-bottom:18px;}
+.modusKnopf{
+  flex:1;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+  padding:11px 10px;border:1px solid var(--linie);border-radius:8px;
+  background:var(--blatt);color:var(--tinte);cursor:pointer;
+}
+.modusKnopf[aria-pressed="true"]{background:var(--tinte);border-color:var(--tinte);color:#fff;}
+.modusKnopf:disabled{opacity:.4;cursor:not-allowed;}
+
+.kategorien{display:flex;flex-direction:column;gap:10px;}
+.kategorieZeile{
+  border:1px solid var(--linie);border-radius:8px;background:var(--blatt);overflow:hidden;
+}
+.kategorieZeile{
+  border:1px solid var(--linie);border-radius:10px;background:var(--blatt);overflow:hidden;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.kategorieZeile.offen{border-color:var(--rot);box-shadow:0 2px 10px rgba(226,0,26,.08);}
+.kategorieKnopf{
+  width:100%;text-align:left;font-family:'Oswald',sans-serif;font-weight:500;font-size:16px;
+  letter-spacing:.01em;padding:13px 14px;border:none;background:none;color:var(--tinte);cursor:pointer;
+  display:flex;align-items:center;gap:12px;transition:background-color .15s ease;
+}
+.katIcon{
+  width:34px;height:34px;border-radius:9px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+}
+.katIcon svg{width:21px;height:21px;fill:#fff;stroke:none;}
+.kategorieKnopf[aria-pressed="true"]{background:#FBF0EC;}
+.kategorieDetail{
+  display:none;padding:2px 14px 16px 60px;
+}
+.kategorieZeile.offen .kategorieDetail{display:block;}
+.schritte{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 12px;}
+.schrittChip{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  padding:7px 13px;border-radius:999px;border:1px solid var(--linie);
+  background:var(--papier);color:var(--tinte);cursor:pointer;
+  transition:background-color .12s ease, border-color .12s ease, box-shadow .12s ease, transform .1s ease;
+}
+.schrittChip:active{transform:scale(.96);}
+.schrittChip[aria-pressed="true"]{background:var(--rot);border-color:var(--rot);color:#fff;box-shadow:0 2px 6px rgba(226,0,26,.25);}
+.kategorieDetail input{
+  width:100%;font-family:'Inter',sans-serif;font-size:15px;color:var(--tinte);
+  background:var(--papier);border:1px solid var(--linie);border-radius:6px;padding:9px 11px;
+}
+.kategorieKnopf:disabled,.kategorieZeile.gesperrt .kategorieKnopf{opacity:.4;cursor:not-allowed;}
 .wer{
   display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
   background:var(--blatt);border:1px solid var(--linie);border-radius:8px;
@@ -51,6 +99,11 @@ h1{
   background:var(--pruef-bg);border:1px solid #E8D5A3;color:var(--pruef);
   border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:14px;line-height:1.5;
 }
+.vorhandenerHinweis{
+  border-radius:8px;padding:10px 13px;margin-top:8px;font-size:13px;line-height:1.5;
+}
+.vorhandenerHinweis.warnung{background:var(--pruef-bg);border:1px solid #E8D5A3;color:var(--pruef);}
+.vorhandenerHinweis.info{background:#E9F0F7;border:1px solid #C7D9EA;color:#2A5C8A;}
 select:disabled{opacity:.5;}
 .knopfMikro:disabled{opacity:.35;cursor:not-allowed;}
 .eingabe > label{
@@ -256,7 +309,6 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   </div>
 
   <h1>Bautagebuch</h1>
-  <p class="unterzeile">Erzähl kurz, was heute auf der Baustelle lief. Reine Doku — Stunden laufen weiter über WinWorker.</p>
 
   <div class="wer" id="wer">
     <span id="werName">…</span>
@@ -267,9 +319,15 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <input type="date" id="datum"
       style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
     <div class="nachtragHinweis verborgen" id="nachtragHinweis"></div>
+    <div class="vorhandenerHinweis verborgen" id="vorhandenerHinweis"></div>
   </div>
 
   <div class="abwesenheit verborgen" id="abwesenheit"></div>
+
+  <div class="modusUmschalter" id="modusUmschalter">
+    <button type="button" class="modusKnopf" data-modus="sprechen" aria-pressed="true">🎙 Sprechen</button>
+    <button type="button" class="modusKnopf" data-modus="tippen" aria-pressed="false">⌨ Tippen</button>
+  </div>
 
   <div class="eingabe">
     <label for="baustelle">Baustelle</label>
@@ -279,12 +337,18 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
   </div>
 
-  <div class="mikro">
+  <div class="mikro" id="blockSprechen">
     <button class="knopfMikro" id="knopfMikro" aria-label="Aufnahme starten">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M18 11a1 1 0 0 0-2 0 4 4 0 0 1-8 0 1 1 0 0 0-2 0 6 6 0 0 0 5 5.9V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-3.1a6 6 0 0 0 5-5.9z"/></svg>
     </button>
     <div class="uhr" id="uhr">0:00</div>
     <div class="mikroText" id="mikroText">Antippen zum Starten</div>
+  </div>
+
+  <div class="eingabe verborgen" id="blockTippen">
+    <label>Was wurde gemacht — antippen, was zutrifft</label>
+    <div class="kategorien" id="kategorien"></div>
+    <button type="button" class="senden" id="tippenErstellen" style="margin-top:16px;" disabled>Protokoll erstellen</button>
   </div>
 
   <div class="eingabe">
@@ -316,7 +380,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 <!-- ========== 3. Protokoll ========== -->
 <div class="verborgen" id="ansichtProtokoll">
   <div class="leiste">
-    <span class="hinweis">Entwurf aus der Sprachmemo — alles hier ist direkt überschreibbar.</span>
+    <span class="hinweis">Entwurf — alles hier ist direkt überschreibbar.</span>
     <button class="knopf" id="neueAufnahme">Nochmal aufnehmen</button>
     <button class="knopf" id="nochmal">Neuer Eintrag</button>
     <button class="knopf" id="allesOk">Prüfstellen bestätigen</button>
@@ -466,6 +530,7 @@ function tokenHolen(){
 }
 
 function starteSeite(){
+  kategorienZeichnen();
   $('datum').value = heuteIso();
   $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
   $('datum').addEventListener('change', datumGewechselt);
@@ -489,10 +554,58 @@ function starteSeite(){
     $('werName').textContent = ich.vorname;
     baustellenLaden();
     einsatzLaden();
+    vorhandenenBerichtPruefen();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
+}
+
+/* Prüft, ob für den gewählten Tag schon ein Bericht dieser Person existiert -
+   verhindert doppelte Einträge, egal ob per Sprache oder Tippen erzeugt.
+   - abgeschlossen (archiviert): Warnung, aber nicht automatisch geladen -
+     die Archiv-Grenze respektiert, dass das Büro es erst freigeben muss.
+   - nicht abgeschlossen (vom Büro zur Bearbeitung freigegeben, oder ein
+     nie abgeschlossener Rest): wird direkt geladen, ein neuer Versuch
+     überschreibt genau diesen einen Bericht statt einen zweiten anzulegen. */
+var vorhandenerBerichtId = null;
+var vorhandenerBerichtArchiviert = false;
+
+function vorhandenenBerichtPruefen(){
+  vorhandenerBerichtId = null;
+  vorhandenerBerichtArchiviert = false;
+  $('vorhandenerHinweis').classList.add('verborgen');
+  if (!ich.vorname) return;
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'bautagebuch_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var alle = (d && d.berichte) ? d.berichte : [];
+    var treffer = alle.filter(function(b){
+      return b.datum === $('datum').value && b.mitarbeiter_spitzname === ich.vorname;
+    })[0];
+    if (!treffer) return;
+
+    if (treffer.abgeschlossen){
+      vorhandenerBerichtArchiviert = true;
+      $('vorhandenerHinweis').textContent =
+        'Für diesen Tag liegt schon ein abgelegter Bericht vor (' + (treffer.baustelle_text || '') +
+        '). Ein neuer Eintrag legt einen zusätzlichen Bericht an - falls der bestehende korrigiert ' +
+        'werden soll, bitte im Büro Bescheid geben.';
+      $('vorhandenerHinweis').className = 'vorhandenerHinweis warnung';
+    } else {
+      vorhandenerBerichtId = treffer.Id;
+      $('vorhandenerHinweis').textContent =
+        'Für diesen Tag gibt es schon einen Eintrag, der zur Bearbeitung freigegeben ist (' +
+        (treffer.baustelle_text || '') + '). Was du jetzt erstellst, ersetzt genau diesen Bericht.';
+      $('vorhandenerHinweis').className = 'vorhandenerHinweis info';
+    }
+    $('vorhandenerHinweis').classList.remove('verborgen');
+  })
+  .catch(function(){});
 }
 
 function baustellenLaden(){
@@ -557,11 +670,17 @@ function baustellenZeichnen(){
     $('abwesenheit').classList.remove('verborgen');
     $('knopfMikro').disabled = true;
     $('senden').disabled = true;
+    $('tippenErstellen').disabled = true;
+    document.querySelectorAll('.modusKnopf').forEach(function(b){ b.disabled = true; });
+    document.querySelectorAll('.kategorieKnopf').forEach(function(b){ b.disabled = true; });
     return;
   }
 
   $('baustelle').disabled = false;
   $('knopfMikro').disabled = false;
+  document.querySelectorAll('.modusKnopf').forEach(function(b){ b.disabled = false; });
+  document.querySelectorAll('.kategorieKnopf').forEach(function(b){ b.disabled = false; });
+  pruefeTippenBereit();
   $('abwesenheit').classList.add('verborgen');
 
   if (gewaehlt && namen.indexOf(gewaehlt) !== -1){
@@ -576,6 +695,7 @@ function baustellenZeichnen(){
     $('baustelleHinweis').classList.remove('verborgen');
   }
   pruefeBereit();
+  pruefeTippenBereit();
 }
 
 function datumGewechselt(){
@@ -590,7 +710,149 @@ function datumGewechselt(){
   }
   $('baustelle').value = '';   // Auswahl vom vorherigen Tag nicht mitschleppen
   baustellenZeichnen();
+  vorhandenenBerichtPruefen();
 }
+
+/* Ein Symbol pro Kategorie, schlichte Strichzeichnung wie im Rest des Systems. */
+var KAT_ICONS = {
+  'Vorarbeiten': '<rect x="12.3" y="1.5" width="3" height="12" rx="1.3" transform="rotate(38 13.8 7.5)"/><path d="M5 21l1.6-6.5h8.8L17 21a1.3 1.3 0 0 1-1.3 1H6.3A1.3 1.3 0 0 1 5 21z"/>',
+  'Spachteln': '<path d="M3.5 20.5V10a1.3 1.3 0 0 1 1.3-1.3h9.7z"/><rect x="13" y="2.5" width="3.4" height="8" rx="1.1" transform="rotate(45 14.7 6.5)"/>',
+  'Streichen': '<rect x="2" y="3" width="13.5" height="6.5" rx="3.2"/><rect x="9.8" y="8.5" width="2.8" height="10.5" rx="1.4"/><rect x="7" y="17.7" width="8.4" height="2.8" rx="1.4"/>',
+  'Tapezieren': '<ellipse cx="12" cy="5.5" rx="6" ry="2.4"/><path d="M6 5.5h12v13a6 2.4 0 0 1-12 0z"/>',
+  'Lackieren': '<path d="M6 9.5h12l-1.3 11a1.6 1.6 0 0 1-1.6 1.5H8.9a1.6 1.6 0 0 1-1.6-1.5z"/><rect x="10.4" y="1.5" width="3.2" height="9.5" rx="1.3"/>',
+  'Sonstiges': '<circle cx="6" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="12" r="2.2"/>'
+};
+/* Eigene, kräftige Farbe je Kategorie - dient als feste Wiedererkennung,
+   nicht als Status. Rot bleibt bewusst reserviert fürs "aktiv/aufgeklappt". */
+var KAT_FARBEN = {
+  'Vorarbeiten': '#F1720C',
+  'Spachteln': '#D4A017',
+  'Streichen': '#16A34A',
+  'Tapezieren': '#0891B2',
+  'Lackieren': '#2563EB',
+  'Sonstiges': '#9333EA'
+};
+
+/* Hauptkategorien fürs Tippen, mit typischen Ausführungsschritten pro
+   Kategorie - erste Auswahl aus dem Standardleistungsbuch, bei Bedarf
+   hier einfach erweitern. "Sonstiges" hat bewusst keine Unterpunkte,
+   nur ein Freitextfeld. */
+var KATEGORIEN = [
+  { name:'Vorarbeiten', schritte:['Abdecken','Abkleben','Abkehren/Reinigen','Schleifen',
+      'Grundieren','Untergrund prüfen','Altanstrich entfernen','Risse ausbessern'] },
+  { name:'Spachteln', schritte:['Flächenspachtel','Rissverspachtelung','Fugenspachtel',
+      'Feinspachtel','Grobspachtel','Ausbesserung','Q3-Qualität','Q4-Qualität'] },
+  { name:'Streichen', schritte:['Vorstrich','Zwischenanstrich','Endanstrich','Deckanstrich',
+      'Wände','Decke','Fassade','Leibung','Unterzüge','Stützen'] },
+  { name:'Tapezieren', schritte:['Glasgewebe','Vlies','Raufaser','Papiertapete',
+      'Vinyltapete','Strukturtapete','Digitaldruck','Bordüre'] },
+  { name:'Lackieren', schritte:['Türen','Zargen','Fenster','Heizkörper','Geländer',
+      'Grundierung','Zwischenschliff','Holzlasur'] },
+  { name:'Sonstiges', schritte:[] }
+];
+var eingabeModus = 'sprechen';   // 'sprechen' | 'tippen'
+var kategorieAuswahl = {};       // { 'Vorarbeiten': { schritte:['Abkleben'], text:'Flur EG' } }
+
+function kategorienZeichnen(){
+  $('kategorien').innerHTML = KATEGORIEN.map(function(kat, i){
+    var aktiv = kategorieAuswahl.hasOwnProperty(kat.name);
+    var daten = aktiv ? kategorieAuswahl[kat.name] : { schritte:[], text:'' };
+    var schritteHtml = kat.schritte.length ? '<div class="schritte">' +
+      kat.schritte.map(function(s, j){
+        var an = daten.schritte.indexOf(s) !== -1;
+        return '<button type="button" class="schrittChip" data-kat="' + i + '" data-schritt="' + j +
+          '" aria-pressed="' + an + '">' + s + '</button>';
+      }).join('') + '</div>' : '';
+    return '<div class="kategorieZeile' + (aktiv ? ' offen' : '') + '" data-kat="' + i + '">' +
+      '<button type="button" class="kategorieKnopf" aria-pressed="' + aktiv + '">' +
+        '<span class="katIcon" style="background:' + (KAT_FARBEN[kat.name] || '#6B6560') + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (KAT_ICONS[kat.name] || '') + '</svg></span>' +
+        kat.name +
+      '</button>' +
+      '<div class="kategorieDetail">' + schritteHtml +
+        '<input type="text" placeholder="' + (kat.schritte.length ? 'Bereich / weitere Details — optional' : 'was genau') +
+        '" value="' + escape(daten.text) + '"></div>' +
+    '</div>';
+  }).join('');
+
+  $('kategorien').querySelectorAll('.kategorieZeile').forEach(function(zeile){
+    var kat = KATEGORIEN[+zeile.dataset.kat];
+    var knopf = zeile.querySelector('.kategorieKnopf');
+    var feld = zeile.querySelector('.kategorieDetail input');
+
+    knopf.addEventListener('click', function(){
+      if (kategorieAuswahl.hasOwnProperty(kat.name)){
+        delete kategorieAuswahl[kat.name];
+      } else {
+        kategorieAuswahl[kat.name] = { schritte:[], text:'' };
+      }
+      kategorienZeichnen();
+      pruefeTippenBereit();
+    });
+    feld.addEventListener('input', function(){
+      if (!kategorieAuswahl.hasOwnProperty(kat.name)) kategorieAuswahl[kat.name] = { schritte:[], text:'' };
+      kategorieAuswahl[kat.name].text = feld.value;
+    });
+    zeile.querySelectorAll('.schrittChip').forEach(function(chip){
+      chip.addEventListener('click', function(){
+        var s = kat.schritte[+chip.dataset.schritt];
+        var daten = kategorieAuswahl[kat.name];
+        var pos = daten.schritte.indexOf(s);
+        if (pos === -1) daten.schritte.push(s); else daten.schritte.splice(pos, 1);
+        kategorienZeichnen();
+        pruefeTippenBereit();
+      });
+    });
+  });
+}
+
+function pruefeTippenBereit(){
+  var gefuellt = Object.keys(kategorieAuswahl).some(function(k){
+    var d = kategorieAuswahl[k];
+    return d.schritte.length > 0 || d.text.trim() !== '';
+  });
+  $('tippenErstellen').disabled = !($('baustelle').value && gefuellt);
+}
+
+function modusUmschalten(neu){
+  eingabeModus = neu;
+  document.querySelectorAll('.modusKnopf').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.modus === neu);
+  });
+  $('blockSprechen').classList.toggle('verborgen', neu !== 'sprechen');
+  $('blockTippen').classList.toggle('verborgen', neu !== 'tippen');
+}
+document.querySelectorAll('.modusKnopf').forEach(function(b){
+  b.addEventListener('click', function(){ modusUmschalten(b.dataset.modus); });
+});
+
+$('tippenErstellen').addEventListener('click', function(){
+  var teile = [];
+  var stichwortTeile = [];
+  Object.keys(kategorieAuswahl).forEach(function(name){
+    var d = kategorieAuswahl[name];
+    var stueck = name;
+    if (d.schritte.length) stueck += ': ' + d.schritte.join(', ');
+    if (d.text.trim()) stueck += (d.schritte.length ? ' — ' : ': ') + d.text.trim();
+    teile.push(stueck);
+    stichwortTeile.push(d.schritte.length ? name + ' (' + d.schritte.slice(0,2).join('/') + ')' : name);
+  });
+  aufbauen({
+    baustelle: $('baustelle').value,
+    mitarbeiter: ich.vorname,
+    rolle: ich.rolle,
+    dauer: 0,
+    transkript: '',
+    protokoll: {
+      taetigkeiten: teile,
+      material: [],
+      auffaelligkeiten: '',
+      zeitschaetzung: '',
+      stichworte: stichwortTeile.join(', '),
+      unsicher: []
+    }
+  });
+  zeige('ansichtProtokoll');
+});
 
 /* ===== Hilfsfunktionen ===== */
 function $(id){ return document.getElementById(id); }
@@ -701,6 +963,7 @@ function pruefeBereit(){
   $('senden').disabled = !(audioBlob && $('baustelle').value && ich.vorname);
 }
 $('baustelle').addEventListener('change', pruefeBereit);
+$('baustelle').addEventListener('change', pruefeTippenBereit);
 
 function fehlerZeigen(text){
   $('fehler').textContent = text;
@@ -765,9 +1028,9 @@ function aufbauen(d){
     String(Math.floor(jetzt.getTime()/1000)).slice(-4) + ' · Bautagebuch';
 
   $('herkunftText').textContent =
-    'Sprachmemo ' + jetzt.toLocaleDateString('de-DE') + ', ' +
-    jetzt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr · ' +
-    uhrText(d.dauer || 0) + ' min · ' + fotos.length + ' Fotos';
+    (d.dauer ? 'Sprachmemo ' : 'Eingetippt ') + jetzt.toLocaleDateString('de-DE') + ', ' +
+    jetzt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr' +
+    (d.dauer ? ' · ' + uhrText(d.dauer) + ' min' : '') + ' · ' + fotos.length + ' Fotos';
 
   $('pObjekt').textContent = d.baustelle || '';
   $('pDatum').textContent = jetzt.toLocaleDateString('de-DE') + ', ' +
@@ -875,6 +1138,16 @@ var legtGerade = false;
 
 $('ablegen').addEventListener('click', function(){
   if (legtGerade || !letztesProtokoll) return;
+
+  // Für denselben Tag liegt schon ein abgelegter (archivierter) Bericht vor -
+  // hier bewusst nachfragen, damit niemand aus Versehen einen zweiten,
+  // konkurrierenden Bericht für denselben Tag anlegt.
+  if (vorhandenerBerichtArchiviert){
+    var weiter = confirm('Für diesen Tag liegt schon ein abgelegter Bericht vor. ' +
+      'Trotzdem einen zusätzlichen Bericht anlegen?');
+    if (!weiter) return;
+  }
+
   legtGerade = true;
   var knopf = $('ablegen');
   knopf.disabled = true;
@@ -903,28 +1176,33 @@ $('ablegen').addEventListener('click', function(){
 
   var unsicherListe = Array.isArray(p.unsicher) ? p.unsicher.filter(Boolean) : [];
 
+  var bericht = {
+    datum: $('datum').value,                    // welcher Arbeitstag - kommt bewusst aus dem Datumsfeld, nicht aus der Anzeige
+    baustelle_text: baustelleFinal,
+    mitarbeiter_spitzname: nameFinal,
+    rolle: rolleFinal,
+    taetigkeiten: $('pGespraech').innerText.trim(),
+    stichworte: $('pStichworte').innerText.trim(),
+    material: materialZeilen,
+    auffaelligkeiten: $('pAuffaellig').innerText.trim(),
+    zeitschaetzung: $('pZeit').innerText.trim(),
+    transkript: letztesProtokoll.transkript || '',
+    notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
+    fotos_anzahl: fotos.length,
+    aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
+    unsichere_begriffe: unsicherListe.join(', '),
+    geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
+    abgeschlossen: true
+  };
+  // Wurde dieser Tag vom Büro zur Bearbeitung freigegeben, wird genau dieser
+  // Bericht überschrieben (Id mitgeschickt) statt ein neuer angelegt.
+  if (vorhandenerBerichtId) bericht.Id = vorhandenerBerichtId;
+
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       aktion: 'bautagebuch_speichern',
-      bericht: {
-        datum: $('datum').value,                    // welcher Arbeitstag - kommt bewusst aus dem Datumsfeld, nicht aus der Anzeige
-        baustelle_text: baustelleFinal,
-        mitarbeiter_spitzname: nameFinal,
-        rolle: rolleFinal,
-        taetigkeiten: $('pGespraech').innerText.trim(),
-        stichworte: $('pStichworte').innerText.trim(),
-        material: materialZeilen,
-        auffaelligkeiten: $('pAuffaellig').innerText.trim(),
-        zeitschaetzung: $('pZeit').innerText.trim(),
-        transkript: letztesProtokoll.transkript || '',
-        notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
-        fotos_anzahl: fotos.length,
-        aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
-        unsichere_begriffe: unsicherListe.join(', '),
-        geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
-        abgeschlossen: true
-      }
+      bericht: bericht
     })
   })
   .then(function(r){ if(!r.ok) throw new Error('Status ' + r.status); return r.json(); })
@@ -946,16 +1224,21 @@ $('neueAufnahme').addEventListener('click', function(){
   // Erspart bei zwei, drei Versuchen das erneute Einstellen, besonders bei Nachträgen.
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
+  kategorieAuswahl = {};
+  kategorienZeichnen();
   $('uhr').textContent = '0:00';
   $('mikroText').textContent = 'Antippen zum Starten';
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
   $('senden').disabled = true;
+  $('tippenErstellen').disabled = true;
   zeige('ansichtAufnahme');
 });
 
 $('nochmal').addEventListener('click', function(){
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
+  kategorieAuswahl = {};
+  kategorienZeichnen();
   $('uhr').textContent = '0:00';
   $('mikroText').textContent = 'Antippen zum Starten';
   $('notiz').value = '';
@@ -963,6 +1246,7 @@ $('nochmal').addEventListener('click', function(){
   datumGewechselt();
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
   $('senden').disabled = true;
+  $('tippenErstellen').disabled = true;
   zeige('ansichtAufnahme');
 });
 
