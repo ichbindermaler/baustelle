@@ -195,6 +195,30 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
 .knopf.primaer{background:var(--rot);border-color:var(--rot);color:#fff;}
 .knopf.primaer:hover{background:#c60017;}
 
+/* Aktionsleiste im Protokoll: eine klare Hauptaktion, Rest dezent darunter */
+.leisteHaupt{
+  position:sticky;top:0;z-index:20;background:rgba(247,244,236,.96);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--linie);
+  padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+}
+.leisteHaupt .hinweis{font-size:12.5px;color:var(--grau);flex:1 1 100%;order:-1;}
+.knopfGross{
+  width:100%;font-size:17px;font-weight:600;padding:15px 20px;
+  border-radius:12px;box-shadow:0 3px 10px rgba(226,0,26,.22);
+}
+.leisteNeben{
+  display:flex;flex-wrap:wrap;gap:8px;padding:8px 20px 14px;
+  border-bottom:1px solid var(--linie);
+}
+.knopfKlein{
+  font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500;
+  border:none;background:none;color:var(--grau);
+  padding:5px 4px;cursor:pointer;text-decoration:underline;
+  text-underline-offset:2px;
+}
+.knopfKlein:hover{color:var(--tinte);}
+.knopfKlein:focus-visible{outline:2px solid var(--rot);outline-offset:2px;}
+
 .blatt{
   max-width:820px;margin:28px auto 60px;background:var(--blatt);
   border:1px solid var(--linie);padding:44px 52px 52px;
@@ -379,13 +403,16 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 
 <!-- ========== 3. Protokoll ========== -->
 <div class="verborgen" id="ansichtProtokoll">
-  <div class="leiste">
+  <div class="leisteHaupt">
     <span class="hinweis">Entwurf — alles hier ist direkt überschreibbar.</span>
-    <button class="knopf" id="neueAufnahme">Nochmal aufnehmen</button>
-    <button class="knopf" id="nochmal">Neuer Eintrag</button>
-    <button class="knopf" id="allesOk">Prüfstellen bestätigen</button>
-    <button class="knopf" id="drucken">Drucken / als PDF sichern</button>
-    <button class="knopf primaer" id="ablegen">Eintrag ablegen</button>
+    <button class="knopf primaer knopfGross" id="ablegen">Ans Büro weiterleiten</button>
+  </div>
+
+  <div class="leisteNeben">
+    <button class="knopfKlein" id="neueAufnahme">Nochmal aufnehmen</button>
+    <button class="knopfKlein" id="nochmal">Neuer Eintrag</button>
+    <button class="knopfKlein verborgen" id="allesOk">Prüfstellen bestätigen</button>
+    <button class="knopfKlein" id="drucken">Drucken / PDF</button>
   </div>
 
   <div class="blatt">
@@ -592,7 +619,7 @@ function vorhandenenBerichtPruefen(){
     if (treffer.abgeschlossen){
       vorhandenerBerichtArchiviert = true;
       $('vorhandenerHinweis').textContent =
-        'Für diesen Tag liegt schon ein abgelegter Bericht vor (' + (treffer.baustelle_text || '') +
+        'Für diesen Tag ist schon ein Bericht ans Büro geschickt worden (' + (treffer.baustelle_text || '') +
         '). Ein neuer Eintrag legt einen zusätzlichen Bericht an - falls der bestehende korrigiert ' +
         'werden soll, bitte im Büro Bescheid geben.';
       $('vorhandenerHinweis').className = 'vorhandenerHinweis warnung';
@@ -1020,9 +1047,14 @@ $('senden').addEventListener('click', function(){
 function aufbauen(d){
   letztesProtokoll = d;
   var knopf = $('ablegen');
-  if (knopf){ knopf.disabled = false; knopf.textContent = 'Eintrag ablegen'; knopf.classList.add('primaer'); }
+  if (knopf){ knopf.disabled = false; knopf.textContent = 'Ans Büro weiterleiten'; knopf.classList.add('primaer'); }
   var p = d.protokoll;
   var jetzt = new Date();
+
+  // "Prüfstellen bestätigen" ist nur eine sinnvolle Handlung, wenn es
+  // wirklich etwas zu pruefen gibt - sonst nur ein verwirrender Leerknopf.
+  var hatUnsicheres = Array.isArray(p.unsicher) && p.unsicher.filter(Boolean).length > 0;
+  $('allesOk').classList.toggle('verborgen', !hatUnsicheres);
 
   $('dokNummer').textContent = 'BT-' + jetzt.getFullYear() + '-' +
     String(Math.floor(jetzt.getTime()/1000)).slice(-4) + ' · Bautagebuch';
@@ -1143,7 +1175,7 @@ $('ablegen').addEventListener('click', function(){
   // hier bewusst nachfragen, damit niemand aus Versehen einen zweiten,
   // konkurrierenden Bericht für denselben Tag anlegt.
   if (vorhandenerBerichtArchiviert){
-    var weiter = confirm('Für diesen Tag liegt schon ein abgelegter Bericht vor. ' +
+    var weiter = confirm('Für diesen Tag ist schon ein Bericht ans Büro geschickt worden. ' +
       'Trotzdem einen zusätzlichen Bericht anlegen?');
     if (!weiter) return;
   }
@@ -1151,7 +1183,7 @@ $('ablegen').addEventListener('click', function(){
   legtGerade = true;
   var knopf = $('ablegen');
   knopf.disabled = true;
-  knopf.textContent = 'Wird abgelegt …';
+  knopf.textContent = 'Wird weitergeleitet …';
 
   var p = letztesProtokoll.protokoll || {};
 
@@ -1207,13 +1239,13 @@ $('ablegen').addEventListener('click', function(){
   })
   .then(function(r){ if(!r.ok) throw new Error('Status ' + r.status); return r.json(); })
   .then(function(){
-    knopf.textContent = 'Abgelegt ✓';
+    knopf.textContent = 'Ans Büro geschickt ✓';
     knopf.classList.remove('primaer');
   })
   .catch(function(e){
     knopf.disabled = false;
     knopf.textContent = 'Nochmal versuchen';
-    alert('Konnte nicht abgelegt werden: ' + e.message + '\nDas Protokoll bleibt hier stehen, einfach nochmal antippen.');
+    alert('Konnte nicht ans Büro geschickt werden: ' + e.message + '\nDas Protokoll bleibt hier stehen, einfach nochmal antippen.');
   })
   .then(function(){ legtGerade = false; });
 });
