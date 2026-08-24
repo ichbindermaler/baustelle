@@ -1078,7 +1078,7 @@ function aufbauen(d){
 
   var mat = Array.isArray(p.material) ? p.material : [];
   $('pTechnik').innerHTML = mat.map(function(z){
-    return '<tr><th>' + escape(z.material) + '</th><td contenteditable="true">' + escape(z.menge || '') + '</td></tr>';
+    return '<tr><th contenteditable="true">' + escape(z.material) + '</th><td contenteditable="true">' + escape(z.menge || '') + '</td></tr>';
   }).join('');
   $('blockTechnik').classList.toggle('verborgen', mat.length === 0);
 
