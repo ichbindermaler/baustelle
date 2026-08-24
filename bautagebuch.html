@@ -436,7 +436,10 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <div class="feld breit"><label>Name</label><div class="wert" contenteditable="true" id="pWer"></div></div>
     </section>
 
-    <section class="block stichwortBlock">
+    <!-- Für Mitarbeiter ausgeblendet, nur fürs Büro gedacht - der Wert wird
+         trotzdem hier gehalten und beim Weiterleiten mitgeschickt (siehe
+         Ablegen-Handler, liest $('pStichworte').innerText). -->
+    <section class="block stichwortBlock verborgen">
       <h2>Stichworte <span class="stichwortHinweis">für WinWorker</span></h2>
       <div class="fliess stichwortZeile" contenteditable="true" id="pStichworte"></div>
       <button type="button" class="knopf" id="stichworteKopieren" style="margin-top:10px;">Kopieren</button>
