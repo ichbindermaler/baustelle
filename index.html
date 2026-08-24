@@ -287,9 +287,9 @@ const ROLLEN = {
    das automatisch (heute/morgen, Ort, Kollegen), dafür braucht's keine
    eigene Kachel mehr, siehe EINSATZ_ROLLEN. */
 const HAUPTAKTION = {
-  azubi:'geraetecheck.html', geselle:'bautagebuch.html', vorarbeiter:'protokoll.html',
-  meister:'inspektion-vob.html', inhaber:'controlling.html',
-  buero:'anfrage-neu.html', chef:'controlling.html'
+  azubi:'bautagebuch.html', geselle:'bautagebuch.html', vorarbeiter:'',
+  meister:'wer-wohin.html', inhaber:'controlling.html',
+  buero:'', chef:'controlling.html'
 };
 
 const GRUPPEN = [
@@ -300,59 +300,45 @@ const GRUPPEN = [
 ];
 
 /* =========================================================================
-   KACHEL-KATALOG - Stand August 2026, pro Rolle neu abgebildet.
-   Vorarbeiter und Büro sind hier noch NICHT final festgelegt (Farbi steht
-   das noch aus) - Kacheln für diese beiden Rollen sind Übergangsstand aus
-   der vorherigen Fassung, keine bewusste Entscheidung.
+   KACHEL-KATALOG - Stand August 2026.
+   Azubi/Geselle/Meister/Büro jetzt bewusst festgelegt (siehe Chatverlauf).
+   Vorarbeiter bleibt absichtlich leer, bis das nachgeholt wird.
    ========================================================================= */
 const KACHELN = [
   // --- Baustelle ---
   {gruppe:'baustelle',datei:'bautagebuch.html',icon:'kamera',name:'Bautagebuch',
    text:'Sprachmemo, Fotos, Protokoll — alles in einem',
-   rollen:['azubi','geselle','meister','inhaber']},
-  {gruppe:'baustelle',datei:'videofreigabe.html',icon:'haken',name:'Videofreigabe',
-   text:'Aufnahme zur Freigabe einreichen',marke:'geplant',
-   rollen:['geselle','inhaber']},
-  {gruppe:'baustelle',datei:'inspektion-vob.html',icon:'lupe',name:'VOB-Aufnahme',
-   text:'Untergrund prüfen, Bedenken anmelden',
+   rollen:['azubi','geselle','inhaber']},
+  {gruppe:'baustelle',datei:'terminprotokoll.html',icon:'liste',name:'Terminprotokoll',
+   text:'Protokoll für Ortstermine mit Kunde/Hausverwaltung',marke:'arbeit',
    rollen:['meister','inhaber']},
-  {gruppe:'baustelle',datei:'statusseite.html',icon:'haken',name:'Freigabe',
-   text:'Was der Kunde zu sehen bekommt',
-   rollen:['vorarbeiter','inhaber']},
-  {gruppe:'baustelle',datei:'checkin.html',icon:'pin',name:'Einchecken',
-   text:'Baustelle und Kolonne manuell eintragen',
-   rollen:['vorarbeiter','inhaber']},
 
   // --- Geräte & Material ---
   {gruppe:'geraete',datei:'geraetecheck.html',icon:'werkzeug',name:'Gerät melden',
-   text:'QR scannen, Zustand melden',
-   rollen:['azubi','geselle','vorarbeiter','meister','inhaber']},
+   text:'QR scannen, Zustand melden',marke:'arbeit',
+   rollen:['azubi','geselle','inhaber']},
   {gruppe:'geraete',datei:'geraeteuebersicht.html',icon:'regal',name:'Geräteliste',
-   text:'Wer hat was, was steht im Lager',
-   rollen:['geselle','vorarbeiter','inhaber']},
+   text:'Wer hat was, was steht im Lager',marke:'arbeit',
+   rollen:['geselle','inhaber']},
   {gruppe:'geraete',datei:'vorratskammer.html',icon:'eimer',name:'Vorratskammer',
    text:'Material und Restbestände',marke:'geplant',
-   rollen:['vorarbeiter','inhaber']},
+   rollen:['inhaber']},
 
-  // --- Büro: bewusst nur die drei fertigen Punkte. Alles andere hier
-  // war Übergangsstand, jetzt aufgeräumt (August 2026). ---
+  // --- Büro: nur laufende Werkzeuge, keine Haupttaste für diese Rolle ---
   {gruppe:'buero',datei:'wer-wohin.html',icon:'diagramm',name:'Kapazitätsplanung',
    text:'Wer ist wann wo eingeteilt',basis:'buero',
    rollen:['meister','buero','inhaber']},
   {gruppe:'buero',datei:'baustellen-pflege.html',icon:'liste',name:'Baustellenpflege',
    text:'Baustellen anlegen und pflegen',basis:'buero',
    rollen:['buero','inhaber']},
+  {gruppe:'buero',datei:'was-war-los.html',icon:'liste',name:'Bautagebücher',
+   text:'Berichte einsehen, bei Bedarf zur Bearbeitung freigeben',basis:'buero',
+   rollen:['meister','buero','inhaber']},
   {gruppe:'buero',datei:'https://info.ichbindermaler.de/videofreigabe',icon:'haken',
    name:'Videofreigabe',text:'Freigabestatus der Kundenvideos',
    rollen:['buero','inhaber']},
-  {gruppe:'buero',datei:'was-war-los.html',icon:'liste',name:'Bautagebücher',
-   text:'Berichte einsehen, bei Bedarf zur Bearbeitung freigeben',basis:'buero',
-   rollen:['buero','inhaber']},
-  {gruppe:'buero',datei:'kontakt.html',icon:'stift',name:'Kundenanfrage',
-   text:'Kontakt vor Ort aufnehmen',
-   rollen:['geselle','inhaber']},
   {gruppe:'buero',datei:'controlling.html',icon:'diagramm',name:'Controlling & Baustellen',
-   text:'Zahlen und laufende Baustellen auf einen Blick',basis:'buero',marke:'schutz',
+   text:'Zahlen und laufende Baustellen auf einen Blick',basis:'buero',marke:'arbeit',
    rollen:['meister','inhaber','chef']},
   {gruppe:'buero',datei:'kontouebersicht.html',icon:'diagramm',name:'Kontoübersicht',
    text:'Kontostand und Umsätze',basis:'buero',marke:'geplant',
@@ -362,27 +348,42 @@ const KACHELN = [
    rollen:['inhaber','chef']},
   {gruppe:'buero',datei:'wiedervorlage.html',icon:'uhr',name:'Wiedervorlage',
    text:'Aufgaben und Angebote nachfassen',basis:'buero',marke:'geplant',
-   rollen:['meister','inhaber']},
+   rollen:['inhaber']},
   {gruppe:'buero',datei:'anfrage-neu.html',icon:'stift',name:'Neue Anfrage',
    text:'Kundenanfrage aufnehmen',marke:'geplant',
    rollen:['inhaber']},
+  {gruppe:'buero',datei:'kontakt.html',icon:'stift',name:'Kundenanfrage',
+   text:'Kontakt vor Ort aufnehmen',marke:'geplant',
+   rollen:['inhaber']},
   {gruppe:'buero',datei:'pflegekarte.html',icon:'karte',name:'Pflegekarte',
    text:'Produktkarte für den Kunden',
-   rollen:['vorarbeiter','inhaber']},
+   rollen:['inhaber']},
+  {gruppe:'baustelle',datei:'videofreigabe.html',icon:'haken',name:'Videofreigabe (intern)',
+   text:'Aufnahme zur Freigabe einreichen',marke:'geplant',
+   rollen:['inhaber']},
+  {gruppe:'baustelle',datei:'inspektion-vob.html',icon:'lupe',name:'VOB-Aufnahme',
+   text:'Untergrund prüfen, Bedenken anmelden',marke:'geplant',
+   rollen:['inhaber']},
+  {gruppe:'baustelle',datei:'statusseite.html',icon:'haken',name:'Freigabe',
+   text:'Was der Kunde zu sehen bekommt',marke:'geplant',
+   rollen:['inhaber']},
+  {gruppe:'baustelle',datei:'checkin.html',icon:'pin',name:'Einchecken',
+   text:'Baustelle und Kolonne manuell eintragen',marke:'geplant',
+   rollen:['inhaber']},
 
   // --- Team & Lernen ---
   {gruppe:'team',datei:'inspektion-vr.html',icon:'brille',name:'Gesellenweg',
    text:'Untergrund erkennen üben (VR)',marke:'arbeit',
-   rollen:['azubi','inhaber']},
+   rollen:['inhaber']},
   {gruppe:'team',datei:'mitarbeiter-feedback.html',icon:'sprechblase',name:'Feedback',
    text:'Anonym – kommt ohne Namen an',
-   rollen:['azubi','vorarbeiter','inhaber']},
+   rollen:['azubi','geselle','inhaber']},
   {gruppe:'team',datei:'weiterbildung.html',icon:'brille',name:'Weiterbildung',
    text:'Joblinge, AsaFlex und mehr',marke:'geplant',
-   rollen:['azubi','inhaber']},
+   rollen:['inhaber']},
   {gruppe:'team',datei:'ausbildungsleitfaden.html',icon:'liste',name:'Ausbildungsleitfaden',
    text:'Bisher nur Gerätecheck aktiv',marke:'geplant',
-   rollen:['azubi','inhaber']}
+   rollen:['inhaber']}
 ];
 
 const MARKEN = {
