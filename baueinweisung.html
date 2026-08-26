@@ -119,6 +119,18 @@ select:focus,textarea:focus{outline:2px solid var(--rot);outline-offset:1px;}
 textarea{resize:vertical;min-height:76px;line-height:1.5;}
 
 /* Aufnahmeknopf */
+.themenListe{margin-bottom:16px;}
+.themenTitel{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--grau);margin:0 0 8px;
+}
+.themenChips{display:flex;flex-wrap:wrap;gap:7px;}
+.themenChips span{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  background:var(--blatt);border:1px solid var(--linie);border-radius:999px;
+  padding:6px 12px;color:var(--tinte);
+}
+
 .mikro{
   width:100%;background:var(--blatt);border:1px solid var(--linie);
   border-radius:14px;padding:26px 20px;text-align:center;margin-bottom:18px;
@@ -363,6 +375,18 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <option value="">— lädt … —</option>
     </select>
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
+  </div>
+
+  <div class="themenListe" id="themenListe">
+    <p class="themenTitel">Denk beim Sprechen an:</p>
+    <div class="themenChips">
+      <span>💧 Wasser</span>
+      <span>⚡ Strom</span>
+      <span>🔑 Schlüssel / Zugang</span>
+      <span>👤 Ansprechpartner</span>
+      <span>📏 Höhen / Einschränkungen</span>
+      <span>🧰 Material</span>
+    </div>
   </div>
 
   <div class="mikro" id="blockSprechen">
@@ -619,6 +643,7 @@ function modusUmschalten(neu){
     b.setAttribute('aria-pressed', b.dataset.modus === neu);
   });
   $('blockSprechen').classList.toggle('verborgen', neu !== 'sprechen');
+  $('themenListe').classList.toggle('verborgen', neu !== 'sprechen');
   $('blockTippen').classList.toggle('verborgen', neu !== 'tippen');
 }
 document.querySelectorAll('.modusKnopf').forEach(function(b){
