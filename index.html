@@ -176,6 +176,15 @@
   /* ---------- Demo ---------- */
   /* ---------- Rollen-Vorschau (nur für Inhaber) ---------- */
   .vorschau{padding:0 0 18px}
+
+  .freigabeHinweis{
+    background:#E9F0F7;border:1px solid #C7D9EA;border-left:3px solid var(--rot);
+    border-radius:8px;padding:13px 15px;margin-bottom:18px;
+  }
+  .freigabeHinweis p{margin:0;font-size:13.5px;line-height:1.5;color:#2A5C8A;}
+  .freigabeHinweis p + p{margin-top:6px;}
+  .freigabeHinweis a{color:var(--rot);font-weight:600;text-decoration:none;}
+  .freigabeHinweis a:hover{text-decoration:underline;}
   .vorschau-label{
     font-family:'Inter',sans-serif;font-weight:600;font-size:10.5px;
     text-transform:uppercase;letter-spacing:.13em;color:var(--grau);margin:0 0 8px;
@@ -222,6 +231,8 @@
     <p class="vorschau-label">Ansicht für</p>
     <div class="vorschau-knoepfe" id="vorschauKnoepfe"></div>
   </section>
+
+  <div class="freigabeHinweis" id="freigabeHinweis" hidden></div>
 
   <main id="inhalt"></main>
 
@@ -566,6 +577,56 @@ function zeichnen(person){
   }
 
   inhaltZeichnen();
+  freigabenPruefen(person.vorname);
+}
+
+/* Prüft über alle drei Protokoll-Arten, ob das Büro für diese Person etwas
+   "zur Bearbeitung freigegeben" hat (abgeschlossen:false nach einer
+   vorherigen Ablage bedeutet immer genau das - Berichte starten sonst
+   immer als abgeschlossen:true). Läuft still im Hintergrund, kein Fehler
+   sichtbar, falls ein Zweig noch nicht existiert oder offline ist. */
+const FREIGABE_QUELLEN = [
+  { aktion:'bautagebuch_laden', ziel:'bautagebuch.html', label:'Bautagebuch' },
+  { aktion:'terminprotokoll_laden', ziel:'terminprotokoll.html', label:'Terminprotokoll' },
+  { aktion:'baueinweisung_laden', ziel:'baueinweisung.html', label:'Baueinweisung' }
+];
+
+async function freigabenPruefen(vorname){
+  if (CONFIG.DEMO_MODUS) return;   // im Demo-Modus keine echten Serverdaten
+  const box = $('#freigabeHinweis');
+  try{
+    const ergebnisse = await Promise.all(FREIGABE_QUELLEN.map(q =>
+      fetch(CONFIG.WEBHOOK_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ aktion:q.aktion })
+      }).then(r => r.ok ? r.json() : { berichte:[] }).catch(() => ({ berichte:[] }))
+    ));
+
+    const treffer = [];
+    ergebnisse.forEach((daten, i) => {
+      const q = FREIGABE_QUELLEN[i];
+      (daten.berichte || []).forEach(b => {
+        if (b.mitarbeiter_spitzname === vorname && b.abgeschlossen === false){
+          treffer.push({ ...q, datum:b.datum, baustelle:b.baustelle_text });
+        }
+      });
+    });
+
+    if (!treffer.length){ box.hidden = true; return; }
+
+    const tokenTeil = location.search || '';
+    box.innerHTML = treffer.map(t =>
+      `<p>📋 <strong>${t.label}</strong> vom ${t.datum} (${escapeHtml(t.baustelle)}) braucht noch deine
+       Aufmerksamkeit — <a href="${t.ziel}${tokenTeil}">jetzt nachtragen</a>.</p>`
+    ).join('');
+    box.hidden = false;
+  }catch(e){
+    box.hidden = true;
+  }
+}
+
+function escapeHtml(s){
+  return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
 function vorschauKnoepfeZeichnen(){
