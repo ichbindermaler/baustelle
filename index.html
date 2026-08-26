@@ -606,7 +606,7 @@ async function freigabenPruefen(vorname){
     ergebnisse.forEach((daten, i) => {
       const q = FREIGABE_QUELLEN[i];
       (daten.berichte || []).forEach(b => {
-        if (b.mitarbeiter_spitzname === vorname && b.abgeschlossen === false){
+        if (b.mitarbeiter_spitzname === vorname && !b.abgeschlossen){
           treffer.push({ ...q, datum:b.datum, baustelle:b.baustelle_text });
         }
       });
