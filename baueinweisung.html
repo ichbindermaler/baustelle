@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bautagebuch · Malerbetrieb Bäßgen</title>
+<title>Baueinweisung · Malerbetrieb Bäßgen</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,28 +95,6 @@ h1{
 }
 .nachtragHinweis{color:var(--pruef);}
 .baustelleHinweis{color:var(--grau);}
-
-/* Baueinweisung: eingeklappt eine Zeile, aufgeklappt die sechs Felder -
-   direkt an der Stelle, wo man sowieso gerade die Baustelle auswählt. */
-.beVerknuepft{
-  background:var(--blatt);border:1px solid var(--linie);border-radius:8px;
-  margin-bottom:18px;overflow:hidden;
-}
-.beKopf{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:12px 14px;cursor:pointer;font-size:14px;font-weight:500;
-}
-.beKopf .bePfeil{color:var(--grau);transition:transform .15s ease;flex:0 0 auto;}
-.beVerknuepft.offen .bePfeil{transform:rotate(90deg);}
-.beInhalt{display:none;padding:0 14px 14px;}
-.beVerknuepft.offen .beInhalt{display:block;}
-.beZeile{padding:8px 0;border-top:1px solid var(--linie);}
-.beZeile label{
-  display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;
-  letter-spacing:.07em;text-transform:uppercase;color:var(--grau);margin-bottom:2px;
-}
-.beZeile span{font-size:14px;}
-.beLeer{padding:12px 14px;font-size:13.5px;color:var(--grau);font-style:italic;}
 .abwesenheit{
   background:var(--pruef-bg);border:1px solid #E8D5A3;color:var(--pruef);
   border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:14px;line-height:1.5;
@@ -300,9 +278,9 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
 .punkte{width:100%;border-collapse:collapse;font-size:14.5px;}
 .punkte thead th{text-align:left;padding:0 14px 7px 0;font-family:'IBM Plex Mono',monospace;font-weight:400;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--grau);border-bottom:1px solid var(--linie);}
 .punkte td{padding:10px 14px 10px 0;border-bottom:1px solid var(--linie);vertical-align:top;}
-.punkte td:first-child{width:52%;}
-.punkte td:nth-child(2),.punkte td:last-child{width:24%;}
-.punkte td:last-child{padding-right:0;}
+.punkte td:first-child{width:44%;}
+.punkte td:nth-child(2),.punkte td:nth-child(3){width:22%;}
+.punkte td:last-child{padding-right:0;width:28px;}
 
 .fotos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
 .foto figure{margin:0;}
@@ -358,10 +336,10 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 <div class="aufnahme" id="ansichtAufnahme">
   <div class="marke">
     <img src="data:image/png;base64,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" alt="">
-    <div><b>Malerbetrieb Bäßgen</b><span>Bautagebuch</span></div>
+    <div><b>Malerbetrieb Bäßgen</b><span>Baueinweisung</span></div>
   </div>
 
-  <h1>Bautagebuch</h1>
+  <h1>Baueinweisung</h1>
 
   <div class="wer" id="wer">
     <span id="werName">…</span>
@@ -372,10 +350,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <input type="date" id="datum"
       style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
     <div class="nachtragHinweis verborgen" id="nachtragHinweis"></div>
-    <div class="vorhandenerHinweis verborgen" id="vorhandenerHinweis"></div>
   </div>
-
-  <div class="abwesenheit verborgen" id="abwesenheit"></div>
 
   <div class="modusUmschalter" id="modusUmschalter">
     <button type="button" class="modusKnopf" data-modus="sprechen" aria-pressed="true">🎙 Sprechen</button>
@@ -390,8 +365,6 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
   </div>
 
-  <div class="beVerknuepft verborgen" id="beVerknuepft"></div>
-
   <div class="mikro" id="blockSprechen">
     <button class="knopfMikro" id="knopfMikro" aria-label="Aufnahme starten">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M18 11a1 1 0 0 0-2 0 4 4 0 0 1-8 0 1 1 0 0 0-2 0 6 6 0 0 0 5 5.9V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-3.1a6 6 0 0 0 5-5.9z"/></svg>
@@ -401,8 +374,24 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   </div>
 
   <div class="eingabe verborgen" id="blockTippen">
-    <label>Was wurde gemacht — antippen, was zutrifft</label>
-    <div class="kategorien" id="kategorien"></div>
+    <label for="beWasser">Wasser</label>
+    <input type="text" id="beWasser" placeholder="z.B. Außenhahn linke Gebäudeseite"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <label for="beStrom" style="margin-top:14px;">Strom</label>
+    <input type="text" id="beStrom" placeholder="z.B. Sicherungskasten im Keller, Schlüssel beim Hausmeister"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <label for="beSchluessel" style="margin-top:14px;">Schlüssel / Zugang</label>
+    <input type="text" id="beSchluessel" placeholder="z.B. Bei Hausverwaltung abholen, Code 1234"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <label for="beAnsprechpartner" style="margin-top:14px;">Ansprechpartner</label>
+    <input type="text" id="beAnsprechpartner" placeholder="z.B. Herr Schmidt, 0170 1234567"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <label for="beHoehen" style="margin-top:14px;">Höhen / Einschränkungen</label>
+    <input type="text" id="beHoehen" placeholder="z.B. Deckenhöhe EG 2,60 m, Gerüst nötig ab 1. OG"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
+    <label for="beMaterial" style="margin-top:14px;">Mitzubringendes Material</label>
+    <input type="text" id="beMaterial" placeholder="z.B. Abdeckfolie, Silikatfarbe 20L"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
     <button type="button" class="senden" id="tippenErstellen" style="margin-top:16px;" disabled>Protokoll erstellen</button>
   </div>
 
@@ -453,7 +442,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
         <b>Malerbetrieb Bäßgen</b>
         <span>Reisertstraße 12a · 53773 Hennef · Tel. 02242 83924</span>
       </div>
-      <div class="dokart">Bautagebuch<em id="dokNummer">BT-2026-0000</em></div>
+      <div class="dokart">Baueinweisung<em id="dokNummer">BE-2026-0000</em></div>
     </header>
 
     <div class="herkunft">
@@ -467,47 +456,43 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <div class="feld breit"><label>Name</label><div class="wert" contenteditable="true" id="pWer"></div></div>
     </section>
 
-    <!-- Für Mitarbeiter ausgeblendet, nur fürs Büro gedacht - der Wert wird
-         trotzdem hier gehalten und beim Weiterleiten mitgeschickt (siehe
-         Ablegen-Handler, liest $('pStichworte').innerText). -->
-    <section class="block stichwortBlock verborgen">
-      <h2>Stichworte <span class="stichwortHinweis">für WinWorker</span></h2>
-      <div class="fliess stichwortZeile" contenteditable="true" id="pStichworte"></div>
-      <button type="button" class="knopf" id="stichworteKopieren" style="margin-top:10px;">Kopieren</button>
-    </section>
-
     <p class="legende verborgen" id="legende">
       <span class="muster">markiert</span>
       <span>= aus der Aufnahme nicht sicher verstanden, bitte gegenlesen. Antippen bestätigt.</span>
     </p>
 
     <section class="block">
-      <h2><span class="zaehler">01</span> Tätigkeiten heute</h2>
-      <div class="fliess" contenteditable="true" id="pGespraech"></div>
+      <h2><span class="zaehler">01</span> Wasser</h2>
+      <div class="fliess" contenteditable="true" id="pWasser"></div>
     </section>
 
-    <section class="block" id="blockTechnik">
-      <h2><span class="zaehler">02</span> Verwendetes Material</h2>
-      <p class="materialLeer verborgen" id="materialLeer">Kein Material aus der Aufnahme erkannt — bei Bedarf unten ergänzen.</p>
-      <table class="befund"><tbody id="pTechnik"></tbody></table>
-      <button type="button" class="knopf" id="materialHinzufuegen" style="margin-top:10px;">+ Material hinzufügen</button>
+    <section class="block">
+      <h2><span class="zaehler">02</span> Strom</h2>
+      <div class="fliess" contenteditable="true" id="pStrom"></div>
     </section>
 
-    <section class="block" id="blockAuffaellig">
-      <h2><span class="zaehler">03</span> Auffälligkeiten</h2>
-      <div class="fliess" contenteditable="true" id="pAuffaellig"></div>
+    <section class="block">
+      <h2><span class="zaehler">03</span> Schlüssel / Zugang</h2>
+      <div class="fliess" contenteditable="true" id="pSchluessel"></div>
     </section>
 
-    <section class="block verborgen" id="blockZeit">
-      <h2><span class="zaehler">04</span> Zeitschätzung</h2>
-      <div class="fliess" contenteditable="true" id="pZeit"></div>
-      <p style="margin-top:8px;font-size:12px;color:var(--grau);font-style:italic;">
-        Nur zur groben Orientierung — keine Lohn- oder Abrechnungsgrundlage. Stunden laufen über WinWorker.
-      </p>
+    <section class="block">
+      <h2><span class="zaehler">04</span> Ansprechpartner</h2>
+      <div class="fliess" contenteditable="true" id="pAnsprechpartner"></div>
+    </section>
+
+    <section class="block">
+      <h2><span class="zaehler">05</span> Höhen / Einschränkungen</h2>
+      <div class="fliess" contenteditable="true" id="pHoehen"></div>
+    </section>
+
+    <section class="block">
+      <h2><span class="zaehler">06</span> Mitzubringendes Material</h2>
+      <div class="fliess" contenteditable="true" id="pMaterial"></div>
     </section>
 
     <section class="block verborgen" id="blockFotos">
-      <h2><span class="zaehler">05</span> Fotos</h2>
+      <h2><span class="zaehler">07</span> Fotos</h2>
       <div class="fotos" id="pFotos"></div>
     </section>
 
@@ -529,57 +514,12 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 
 <script>
 /* ===== Einstellungen ===== */
-var WEBHOOK = 'https://n8n.ichbindeinmaler.de/webhook/bautagebuch';   // Sprache -> Protokoll
+var WEBHOOK = 'https://n8n.ichbindeinmaler.de/webhook/baueinweisung';   // Sprache -> Protokoll
 var BUERO   = 'https://n8n.ichbindeinmaler.de/webhook/buero';    // Stammdaten, Speichern
 
 /* ===== Wer bin ich (Token wie auf der Startseite) ===== */
 var ich = { vorname:'', rolle:'' };
 var alleBaustellen = [];
-var wochenDaten = {};   // kompletter Einsatzplan, alle Wochen
-
-/* Das sind keine Baustellen - für solche Tage braucht es kein Bautagebuch.
-   Muss zu den festen Einträgen in wer-wohin.html passen. */
-var ABWESEND = ['Krank','Urlaub','Schule','Sonstige Abwesenheit','Kurzarbeit'];
-function istAbwesenheit(text){
-  return ABWESEND.some(function(a){
-    return (text||'').toLowerCase().indexOf(a.toLowerCase()) === 0;
-  });
-}
-
-/* Wochenschlüssel wie in wer-wohin.html - muss identisch bleiben,
-   sonst passen die Datensätze nicht zusammen. */
-function mondayOfDate(d){
-  var date = new Date(d);
-  var day = (date.getDay() + 6) % 7;
-  date.setDate(date.getDate() - day);
-  date.setHours(0,0,0,0);
-  return date;
-}
-function isoWeekNumber(d){
-  var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  var dayNum = (date.getUTCDay() + 6) % 7;
-  date.setUTCDate(date.getUTCDate() - dayNum + 3);
-  var firstThursday = new Date(Date.UTC(date.getUTCFullYear(),0,4));
-  return 1 + Math.round((date - firstThursday) / 86400000 / 7);
-}
-function weekKeyOf(monday){
-  var week = isoWeekNumber(monday);
-  var jahr = new Date(monday.getTime() + 3*86400000).getFullYear();
-  return jahr + '-' + String(week).padStart(2,'0');
-}
-
-/* Was stand für diesen Tag im Plan? '' wenn nichts bekannt. */
-function einsatzFuerDatum(iso){
-  if (!iso) return '';
-  var d = new Date(iso + 'T12:00:00');
-  var wt = (d.getDay() + 6) % 7;
-  if (wt > 4) return '';   // Wochenende
-  var tage = ['mo','di','mi','do','fr'];
-  var woche = wochenDaten[weekKeyOf(mondayOfDate(d))];
-  if (!woche || !woche.rows) return '';
-  var zeile = woche.rows.filter(function(r){ return r.name === ich.vorname; })[0];
-  return zeile ? (zeile[tage[wt]] || '') : '';
-}
 
 function heuteIso(){
   var d = new Date();
@@ -593,10 +533,11 @@ function tokenHolen(){
 }
 
 function starteSeite(){
-  kategorienZeichnen();
   $('datum').value = heuteIso();
-  $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
   $('datum').addEventListener('change', datumGewechselt);
+  // kein "max" auf heute - ein Termin kann auch für die nahe Zukunft
+  // vorbereitet bzw. nachträglich für einen Termin von vor ein paar Tagen
+  // erfasst werden, anders als beim täglichen Bautagebuch.
 
   var token = tokenHolen();
   if (!token){
@@ -616,60 +557,10 @@ function starteSeite(){
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
     baustellenLaden();
-    einsatzLaden();
-    vorhandenenBerichtPruefen();
-    baueinweisungenLaden();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
-}
-
-/* Prüft, ob für den gewählten Tag schon ein Bericht dieser Person existiert -
-   verhindert doppelte Einträge, egal ob per Sprache oder Tippen erzeugt.
-   - abgeschlossen (archiviert): Warnung, aber nicht automatisch geladen -
-     die Archiv-Grenze respektiert, dass das Büro es erst freigeben muss.
-   - nicht abgeschlossen (vom Büro zur Bearbeitung freigegeben, oder ein
-     nie abgeschlossener Rest): wird direkt geladen, ein neuer Versuch
-     überschreibt genau diesen einen Bericht statt einen zweiten anzulegen. */
-var vorhandenerBerichtId = null;
-var vorhandenerBerichtArchiviert = false;
-
-function vorhandenenBerichtPruefen(){
-  vorhandenerBerichtId = null;
-  vorhandenerBerichtArchiviert = false;
-  $('vorhandenerHinweis').classList.add('verborgen');
-  if (!ich.vorname) return;
-
-  fetch(BUERO, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ aktion:'bautagebuch_laden' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    var alle = (d && d.berichte) ? d.berichte : [];
-    var treffer = alle.filter(function(b){
-      return b.datum === $('datum').value && b.mitarbeiter_spitzname === ich.vorname;
-    })[0];
-    if (!treffer) return;
-
-    if (treffer.abgeschlossen){
-      vorhandenerBerichtArchiviert = true;
-      $('vorhandenerHinweis').textContent =
-        'Für diesen Tag ist schon ein Bericht ans Büro geschickt worden (' + (treffer.baustelle_text || '') +
-        '). Ein neuer Eintrag legt einen zusätzlichen Bericht an - falls der bestehende korrigiert ' +
-        'werden soll, bitte im Büro Bescheid geben.';
-      $('vorhandenerHinweis').className = 'vorhandenerHinweis warnung';
-    } else {
-      vorhandenerBerichtId = treffer.Id;
-      $('vorhandenerHinweis').textContent =
-        'Für diesen Tag gibt es schon einen Eintrag, der zur Bearbeitung freigegeben ist (' +
-        (treffer.baustelle_text || '') + '). Was du jetzt erstellst, ersetzt genau diesen Bericht.';
-      $('vorhandenerHinweis').className = 'vorhandenerHinweis info';
-    }
-    $('vorhandenerHinweis').classList.remove('verborgen');
-  })
-  .catch(function(){});
 }
 
 function baustellenLaden(){
@@ -680,11 +571,10 @@ function baustellenLaden(){
   .then(function(r){ return r.json(); })
   .then(function(d){
     var liste = (d && d.baustellen) ? d.baustellen : [];
-    // Abgeschlossene Baustellen taugen nicht mehr für neue Einträge
-    alleBaustellen = liste
-      .filter(function(b){ return b.status !== 'abgeschlossen'; })
-      .map(function(b){ return b.bezeichnung; })
-      .filter(Boolean);
+    // Termine bei abgeschlossenen Baustellen kommen selten vor, aber
+    // theoretisch möglich (Nachbesprechung) - deshalb hier NICHT filtern,
+    // anders als beim Bautagebuch.
+    alleBaustellen = liste.map(function(b){ return b.bezeichnung; }).filter(Boolean);
     baustellenZeichnen();
   })
   .catch(function(){
@@ -694,252 +584,37 @@ function baustellenLaden(){
   });
 }
 
-function einsatzLaden(){
-  fetch(BUERO, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ aktion:'einsatzplan_laden' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    var e = Array.isArray(d) ? d[0] : d;
-    wochenDaten = (e && e.weeks) ? e.weeks : {};
-    baustellenZeichnen();
-  })
-  .catch(function(){});
-}
-
-/* Baueinweisung: einmal alle laden, bei Baustellenwahl die passendste
-   (neueste) anzeigen - eingeklappt, damit es nicht in die Aufnahme
-   reinredet, aber einen Klick entfernt ist. */
-var alleBaueinweisungen = [];
-var BE_FELDER = [
-  ['wasser','Wasser'], ['strom','Strom'], ['schluessel','Schlüssel / Zugang'],
-  ['ansprechpartner','Ansprechpartner'], ['hoehen','Höhen / Einschränkungen'],
-  ['material','Mitzubringendes Material']
-];
-
-function baueinweisungenLaden(){
-  fetch(BUERO, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ aktion:'baueinweisung_laden' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    alleBaueinweisungen = (d && d.berichte) ? d.berichte : [];
-    baueinweisungAnzeigen();
-  })
-  .catch(function(){});
-}
-
-function baueinweisungAnzeigen(){
-  var box = $('beVerknuepft');
-  var name = $('baustelle').value;
-  if (!name || name === 'neu'){
-    box.classList.add('verborgen');
-    return;
-  }
-
-  var treffer = alleBaueinweisungen
-    .filter(function(b){ return b.baustelle_text === name; })
-    .sort(function(a,b){ return (b.datum||'').localeCompare(a.datum||''); })[0];
-
-  box.classList.remove('verborgen');
-  box.classList.remove('offen');
-
-  if (!treffer){
-    box.innerHTML = '<div class="beLeer">📋 Keine Baueinweisung für „' + escape(name) + '" hinterlegt.</div>';
-    return;
-  }
-
-  var zeilen = BE_FELDER
-    .filter(function(f){ return (treffer[f[0]] || '').trim(); })
-    .map(function(f){
-      return '<div class="beZeile"><label>' + f[1] + '</label><span>' + escape(treffer[f[0]]) + '</span></div>';
-    }).join('');
-
-  box.innerHTML =
-    '<div class="beKopf" id="beKopfKnopf">📋 Baueinweisung ansehen <span class="bePfeil">▶</span></div>' +
-    '<div class="beInhalt">' + (zeilen || '<div class="beLeer">Keine Felder ausgefüllt.</div>') + '</div>';
-
-  $('beKopfKnopf').addEventListener('click', function(){
-    box.classList.toggle('offen');
-  });
-}
-$('baustelle').addEventListener('change', baueinweisungAnzeigen);
-
 function baustellenZeichnen(){
   var gewaehlt = $('baustelle').value;
-  var geplant = einsatzFuerDatum($('datum').value);
-  var abwesend = istAbwesenheit(geplant);
-
-  // Abwesenheiten gehören nicht in die Baustellenliste
-  var vorschlag = abwesend ? '' : geplant;
-  var namen = alleBaustellen.filter(function(n){ return !istAbwesenheit(n); });
-  if (vorschlag && namen.indexOf(vorschlag) === -1) namen.unshift(vorschlag);
-
   $('baustelle').innerHTML =
     '<option value="">— auswählen —</option>' +
-    namen.map(function(n){ return '<option>' + escape(n) + '</option>'; }).join('') +
+    alleBaustellen.map(function(n){ return '<option>' + escape(n) + '</option>'; }).join('') +
     '<option value="neu">Neues Objekt / noch nicht angelegt</option>';
-
-  $('baustelleHinweis').classList.add('verborgen');
-
-  if (abwesend){
-    // Kein Bautagebuch nötig - Formular sperren statt jemanden
-    // versehentlich einen Eintrag für seinen Urlaubstag schreiben zu lassen
-    $('baustelle').value = '';
-    $('baustelle').disabled = true;
-    $('abwesenheit').textContent = 'Laut Einsatzplan: ' + geplant + '. Für diesen Tag braucht es kein Bautagebuch.';
-    $('abwesenheit').classList.remove('verborgen');
-    $('knopfMikro').disabled = true;
-    $('senden').disabled = true;
-    $('tippenErstellen').disabled = true;
-    document.querySelectorAll('.modusKnopf').forEach(function(b){ b.disabled = true; });
-    document.querySelectorAll('.kategorieKnopf').forEach(function(b){ b.disabled = true; });
-    $('beVerknuepft').classList.add('verborgen');
-    return;
-  }
-
-  $('baustelle').disabled = false;
-  $('knopfMikro').disabled = false;
-  document.querySelectorAll('.modusKnopf').forEach(function(b){ b.disabled = false; });
-  document.querySelectorAll('.kategorieKnopf').forEach(function(b){ b.disabled = false; });
-  pruefeTippenBereit();
-  $('abwesenheit').classList.add('verborgen');
-
-  if (gewaehlt && namen.indexOf(gewaehlt) !== -1){
-    $('baustelle').value = gewaehlt;
-  } else if (vorschlag){
-    $('baustelle').value = vorschlag;
-    $('baustelleHinweis').textContent = 'Aus dem Einsatzplan übernommen — bei Bedarf ändern.';
-    $('baustelleHinweis').classList.remove('verborgen');
-  } else if ($('datum').value !== heuteIso()){
-    $('baustelle').value = '';
-    $('baustelleHinweis').textContent = 'Für diesen Tag liegt kein Einsatzplan vor — bitte selbst auswählen.';
-    $('baustelleHinweis').classList.remove('verborgen');
-  }
+  if (gewaehlt && alleBaustellen.indexOf(gewaehlt) !== -1) $('baustelle').value = gewaehlt;
   pruefeBereit();
   pruefeTippenBereit();
-  baueinweisungAnzeigen();
 }
 
 function datumGewechselt(){
   var gewaehlt = $('datum').value;
   if (gewaehlt && gewaehlt !== heuteIso()){
     var d = new Date(gewaehlt + 'T12:00:00');
-    $('nachtragHinweis').textContent = 'Nachtrag für ' +
+    $('nachtragHinweis').textContent = 'Für ' +
       d.toLocaleDateString('de-DE', { weekday:'long', day:'2-digit', month:'long' }) + '.';
     $('nachtragHinweis').classList.remove('verborgen');
   } else {
     $('nachtragHinweis').classList.add('verborgen');
   }
-  $('baustelle').value = '';   // Auswahl vom vorherigen Tag nicht mitschleppen
-  baustellenZeichnen();
-  vorhandenenBerichtPruefen();
 }
 
-/* Ein Symbol pro Kategorie, schlichte Strichzeichnung wie im Rest des Systems. */
-var KAT_ICONS = {
-  'Vorarbeiten': '<rect x="12.3" y="1.5" width="3" height="12" rx="1.3" transform="rotate(38 13.8 7.5)"/><path d="M5 21l1.6-6.5h8.8L17 21a1.3 1.3 0 0 1-1.3 1H6.3A1.3 1.3 0 0 1 5 21z"/>',
-  'Spachteln': '<path d="M3.5 20.5V10a1.3 1.3 0 0 1 1.3-1.3h9.7z"/><rect x="13" y="2.5" width="3.4" height="8" rx="1.1" transform="rotate(45 14.7 6.5)"/>',
-  'Streichen': '<rect x="2" y="3" width="13.5" height="6.5" rx="3.2"/><rect x="9.8" y="8.5" width="2.8" height="10.5" rx="1.4"/><rect x="7" y="17.7" width="8.4" height="2.8" rx="1.4"/>',
-  'Tapezieren': '<ellipse cx="12" cy="5.5" rx="6" ry="2.4"/><path d="M6 5.5h12v13a6 2.4 0 0 1-12 0z"/>',
-  'Lackieren': '<path d="M6 9.5h12l-1.3 11a1.6 1.6 0 0 1-1.6 1.5H8.9a1.6 1.6 0 0 1-1.6-1.5z"/><rect x="10.4" y="1.5" width="3.2" height="9.5" rx="1.3"/>',
-  'Sonstiges': '<circle cx="6" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="18" cy="12" r="2.2"/>'
-};
-/* Eigene, kräftige Farbe je Kategorie - dient als feste Wiedererkennung,
-   nicht als Status. Rot bleibt bewusst reserviert fürs "aktiv/aufgeklappt". */
-var KAT_FARBEN = {
-  'Vorarbeiten': '#F1720C',
-  'Spachteln': '#D4A017',
-  'Streichen': '#16A34A',
-  'Tapezieren': '#0891B2',
-  'Lackieren': '#2563EB',
-  'Sonstiges': '#9333EA'
-};
-
-/* Hauptkategorien fürs Tippen, mit typischen Ausführungsschritten pro
-   Kategorie - erste Auswahl aus dem Standardleistungsbuch, bei Bedarf
-   hier einfach erweitern. "Sonstiges" hat bewusst keine Unterpunkte,
-   nur ein Freitextfeld. */
-var KATEGORIEN = [
-  { name:'Vorarbeiten', schritte:['Abdecken','Abkleben','Abkehren/Reinigen','Schleifen',
-      'Grundieren','Untergrund prüfen','Altanstrich entfernen','Risse ausbessern'] },
-  { name:'Spachteln', schritte:['Flächenspachtel','Rissverspachtelung','Fugenspachtel',
-      'Feinspachtel','Grobspachtel','Ausbesserung','Q3-Qualität','Q4-Qualität'] },
-  { name:'Streichen', schritte:['Vorstrich','Zwischenanstrich','Endanstrich','Deckanstrich',
-      'Wände','Decke','Fassade','Leibung','Unterzüge','Stützen'] },
-  { name:'Tapezieren', schritte:['Glasgewebe','Vlies','Raufaser','Papiertapete',
-      'Vinyltapete','Strukturtapete','Digitaldruck','Bordüre'] },
-  { name:'Lackieren', schritte:['Türen','Zargen','Fenster','Heizkörper','Geländer',
-      'Grundierung','Zwischenschliff','Holzlasur'] },
-  { name:'Sonstiges', schritte:[] }
-];
-var eingabeModus = 'sprechen';   // 'sprechen' | 'tippen'
-var kategorieAuswahl = {};       // { 'Vorarbeiten': { schritte:['Abkleben'], text:'Flur EG' } }
-
-function kategorienZeichnen(){
-  $('kategorien').innerHTML = KATEGORIEN.map(function(kat, i){
-    var aktiv = kategorieAuswahl.hasOwnProperty(kat.name);
-    var daten = aktiv ? kategorieAuswahl[kat.name] : { schritte:[], text:'' };
-    var schritteHtml = kat.schritte.length ? '<div class="schritte">' +
-      kat.schritte.map(function(s, j){
-        var an = daten.schritte.indexOf(s) !== -1;
-        return '<button type="button" class="schrittChip" data-kat="' + i + '" data-schritt="' + j +
-          '" aria-pressed="' + an + '">' + s + '</button>';
-      }).join('') + '</div>' : '';
-    return '<div class="kategorieZeile' + (aktiv ? ' offen' : '') + '" data-kat="' + i + '">' +
-      '<button type="button" class="kategorieKnopf" aria-pressed="' + aktiv + '">' +
-        '<span class="katIcon" style="background:' + (KAT_FARBEN[kat.name] || '#6B6560') + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (KAT_ICONS[kat.name] || '') + '</svg></span>' +
-        kat.name +
-      '</button>' +
-      '<div class="kategorieDetail">' + schritteHtml +
-        '<input type="text" placeholder="' + (kat.schritte.length ? 'Bereich / weitere Details — optional' : 'was genau') +
-        '" value="' + escape(daten.text) + '"></div>' +
-    '</div>';
-  }).join('');
-
-  $('kategorien').querySelectorAll('.kategorieZeile').forEach(function(zeile){
-    var kat = KATEGORIEN[+zeile.dataset.kat];
-    var knopf = zeile.querySelector('.kategorieKnopf');
-    var feld = zeile.querySelector('.kategorieDetail input');
-
-    knopf.addEventListener('click', function(){
-      if (kategorieAuswahl.hasOwnProperty(kat.name)){
-        delete kategorieAuswahl[kat.name];
-      } else {
-        kategorieAuswahl[kat.name] = { schritte:[], text:'' };
-      }
-      kategorienZeichnen();
-      pruefeTippenBereit();
-    });
-    feld.addEventListener('input', function(){
-      if (!kategorieAuswahl.hasOwnProperty(kat.name)) kategorieAuswahl[kat.name] = { schritte:[], text:'' };
-      kategorieAuswahl[kat.name].text = feld.value;
-    });
-    zeile.querySelectorAll('.schrittChip').forEach(function(chip){
-      chip.addEventListener('click', function(){
-        var s = kat.schritte[+chip.dataset.schritt];
-        var daten = kategorieAuswahl[kat.name];
-        var pos = daten.schritte.indexOf(s);
-        if (pos === -1) daten.schritte.push(s); else daten.schritte.splice(pos, 1);
-        kategorienZeichnen();
-        pruefeTippenBereit();
-      });
-    });
-  });
-}
-
+var BE_FELDER = ['beWasser','beStrom','beSchluessel','beAnsprechpartner','beHoehen','beMaterial'];
 function pruefeTippenBereit(){
-  var gefuellt = Object.keys(kategorieAuswahl).some(function(k){
-    var d = kategorieAuswahl[k];
-    return d.schritte.length > 0 || d.text.trim() !== '';
-  });
+  var gefuellt = BE_FELDER.some(function(id){ return $(id).value.trim(); });
   $('tippenErstellen').disabled = !($('baustelle').value && gefuellt);
 }
+BE_FELDER.forEach(function(id){ $(id).addEventListener('input', pruefeTippenBereit); });
 
 function modusUmschalten(neu){
-  eingabeModus = neu;
   document.querySelectorAll('.modusKnopf').forEach(function(b){
     b.setAttribute('aria-pressed', b.dataset.modus === neu);
   });
@@ -951,16 +626,6 @@ document.querySelectorAll('.modusKnopf').forEach(function(b){
 });
 
 $('tippenErstellen').addEventListener('click', function(){
-  var teile = [];
-  var stichwortTeile = [];
-  Object.keys(kategorieAuswahl).forEach(function(name){
-    var d = kategorieAuswahl[name];
-    var stueck = name;
-    if (d.schritte.length) stueck += ': ' + d.schritte.join(', ');
-    if (d.text.trim()) stueck += (d.schritte.length ? ' — ' : ': ') + d.text.trim();
-    teile.push(stueck);
-    stichwortTeile.push(d.schritte.length ? name + ' (' + d.schritte.slice(0,2).join('/') + ')' : name);
-  });
   aufbauen({
     baustelle: $('baustelle').value,
     mitarbeiter: ich.vorname,
@@ -968,11 +633,12 @@ $('tippenErstellen').addEventListener('click', function(){
     dauer: 0,
     transkript: '',
     protokoll: {
-      taetigkeiten: teile,
-      material: [],
-      auffaelligkeiten: '',
-      zeitschaetzung: '',
-      stichworte: stichwortTeile.join(', '),
+      wasser: $('beWasser').value.trim(),
+      strom: $('beStrom').value.trim(),
+      schluessel: $('beSchluessel').value.trim(),
+      ansprechpartner: $('beAnsprechpartner').value.trim(),
+      hoehen: $('beHoehen').value.trim(),
+      material: $('beMaterial').value.trim(),
       unsicher: []
     }
   });
@@ -1112,7 +778,7 @@ $('senden').addEventListener('click', function(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        aktion:'bautagebuch',
+        aktion:'baueinweisung',
         audio: leser.result,
         mime: audioMime,
         dauer: sekunden,
@@ -1154,8 +820,8 @@ function aufbauen(d){
   var hatUnsicheres = Array.isArray(p.unsicher) && p.unsicher.filter(Boolean).length > 0;
   $('allesOk').classList.toggle('verborgen', !hatUnsicheres);
 
-  $('dokNummer').textContent = 'BT-' + jetzt.getFullYear() + '-' +
-    String(Math.floor(jetzt.getTime()/1000)).slice(-4) + ' · Bautagebuch';
+  $('dokNummer').textContent = 'BE-' + jetzt.getFullYear() + '-' +
+    String(Math.floor(jetzt.getTime()/1000)).slice(-4) + ' · Baueinweisung';
 
   $('herkunftText').textContent =
     (d.dauer ? 'Sprachmemo ' : 'Eingetippt ') + jetzt.toLocaleDateString('de-DE') + ', ' +
@@ -1166,22 +832,12 @@ function aufbauen(d){
   $('pDatum').textContent = jetzt.toLocaleDateString('de-DE') + ', ' +
     jetzt.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) + ' Uhr';
   $('pWer').textContent = d.mitarbeiter || '';
-  $('pStichworte').textContent = p.stichworte || '';
-
-  var t = Array.isArray(p.taetigkeiten) ? p.taetigkeiten : [String(p.taetigkeiten || '')];
-  $('pGespraech').innerHTML = t.map(function(a){ return '<p>' + escape(a) + '</p>'; }).join('');
-
-  var mat = Array.isArray(p.material) ? p.material : [];
-  $('pTechnik').innerHTML = mat.map(materialZeileHtml).join('');
-  materialLeerHinweisAktualisieren();
-
-  var auff = p.auffaelligkeiten || '';
-  $('pAuffaellig').innerHTML = auff ? '<p>' + escape(auff) + '</p>' : '';
-  $('blockAuffaellig').classList.toggle('verborgen', !auff);
-
-  var zeit = p.zeitschaetzung || '';
-  $('pZeit').innerHTML = zeit ? '<p>' + escape(zeit) + '</p>' : '';
-  $('blockZeit').classList.toggle('verborgen', !zeit);
+  $('pWasser').textContent = p.wasser || '';
+  $('pStrom').textContent = p.strom || '';
+  $('pSchluessel').textContent = p.schluessel || '';
+  $('pAnsprechpartner').textContent = p.ansprechpartner || '';
+  $('pHoehen').textContent = p.hoehen || '';
+  $('pMaterial').textContent = p.material || '';
 
   $('pFotos').innerHTML = fotos.map(function(src,i){
     return '<div class="foto"><figure><img src="' + src + '" alt="">' +
@@ -1197,39 +853,11 @@ function aufbauen(d){
 }
 
 /* Unsichere Begriffe im fertigen Text markieren */
-function materialZeileHtml(z){
-  return '<tr><th contenteditable="true">' + escape(z.material || '') + '</th>' +
-    '<td contenteditable="true">' + escape(z.menge || '') + '</td>' +
-    '<td class="materialLoeschCell"><button type="button" class="materialLoeschen" ' +
-    'title="Zeile entfernen" aria-label="Zeile entfernen">✕</button></td></tr>';
-}
-
-function materialLeerHinweisAktualisieren(){
-  var keineZeilen = $('pTechnik').children.length === 0;
-  $('materialLeer').classList.toggle('verborgen', !keineZeilen);
-}
-
-// Löschen per Klick auf das Kreuz - ein Listener für die ganze Tabelle
-// (Delegation), damit auch nachträglich hinzugefügte Zeilen funktionieren.
-$('pTechnik').addEventListener('click', function(ev){
-  var knopf = ev.target.closest('.materialLoeschen');
-  if (!knopf) return;
-  knopf.closest('tr').remove();
-  materialLeerHinweisAktualisieren();
-});
-
-$('materialHinzufuegen').addEventListener('click', function(){
-  $('pTechnik').insertAdjacentHTML('beforeend', materialZeileHtml({material:'', menge:''}));
-  materialLeerHinweisAktualisieren();
-  var neueZeile = $('pTechnik').lastElementChild;
-  neueZeile.querySelector('th').focus();
-});
-
 function markiereUnsicher(liste){
   if(!liste.length){ $('legende').classList.add('verborgen'); return; }
   $('legende').classList.remove('verborgen');
 
-  var bereiche = [$('pGespraech'), $('pTechnik'), $('pAuffaellig')];
+  var bereiche = [$('pWasser'), $('pStrom'), $('pSchluessel'), $('pAnsprechpartner'), $('pHoehen'), $('pMaterial')];
   liste.forEach(function(begriff){
     if(!begriff || begriff.length < 2) return;
     bereiche.forEach(function(bereich){
@@ -1270,96 +898,59 @@ document.addEventListener('click', function(e){
   var t = e.target.closest ? e.target.closest('.pruefen') : null;
   if(t) t.classList.add('ok');
 });
+/* ===== Eintrag in NocoDB ablegen ===== */
+var letztesProtokoll = null;
+var legtGerade = false;
+
 $('allesOk').addEventListener('click', function(){
   document.querySelectorAll('.pruefen').forEach(function(el){ el.classList.add('ok'); });
 });
 $('drucken').addEventListener('click', function(){ window.print(); });
 
-$('stichworteKopieren').addEventListener('click', function(){
-  var text = $('pStichworte').innerText.trim();
-  if (!text) return;
-  var knopf = $('stichworteKopieren');
-  navigator.clipboard.writeText(text).then(function(){
-    var alt = knopf.textContent;
-    knopf.textContent = 'Kopiert ✓';
-    setTimeout(function(){ knopf.textContent = alt; }, 1500);
-  }).catch(function(){
-    alert('Kopieren hat nicht geklappt — bitte den Text von Hand markieren.');
-  });
-});
-
-/* ===== Eintrag in NocoDB ablegen ===== */
-var letztesProtokoll = null;
-var legtGerade = false;
-
 $('ablegen').addEventListener('click', function(){
   if (legtGerade || !letztesProtokoll) return;
-
-  // Für denselben Tag liegt schon ein abgelegter (archivierter) Bericht vor -
-  // hier bewusst nachfragen, damit niemand aus Versehen einen zweiten,
-  // konkurrierenden Bericht für denselben Tag anlegt.
-  if (vorhandenerBerichtArchiviert){
-    var weiter = confirm('Für diesen Tag ist schon ein Bericht ans Büro geschickt worden. ' +
-      'Trotzdem einen zusätzlichen Bericht anlegen?');
-    if (!weiter) return;
-  }
-
   legtGerade = true;
   var knopf = $('ablegen');
   knopf.disabled = true;
   knopf.textContent = 'Wird weitergeleitet …';
 
-  var p = letztesProtokoll.protokoll || {};
-
-  // Wichtig: Wer im gedruckten Protokoll etwas korrigiert hat (Baustelle,
-  // Name können nach der Transkription von Hand nachgebessert werden),
-  // dessen Korrektur soll auch wirklich gespeichert werden. Rolle wird
-  // nicht mehr angezeigt/editiert, kommt direkt aus dem Mitarbeiter-Token.
+  // Wichtig: Wer im gedruckten Protokoll etwas korrigiert hat, dessen
+  // Korrektur soll auch wirklich gespeichert werden. Rolle kommt direkt
+  // aus dem Mitarbeiter-Token, nicht angezeigt/editiert.
   var baustelleFinal = $('pObjekt').textContent.trim() || $('baustelle').value;
   var nameFinal = $('pWer').textContent.trim() || ich.vorname;
-  var rolleFinal = ich.rolle;
-
-  var materialZeilen = Array.prototype.map.call(
-    document.querySelectorAll('#pTechnik tr'),
-    function(tr){
-      var th = tr.querySelector('th'), td = tr.querySelector('td');
-      var name = th ? th.textContent.trim() : '';
-      var menge = td ? td.textContent.trim() : '';
-      return name ? (name + (menge ? ': ' + menge : '')) : '';
-    }).filter(Boolean).join('\n');
 
   var bildunterschriften = Array.prototype.map.call(
     document.querySelectorAll('#pFotos figcaption span'),
     function(s, i){ return 'Foto ' + (i+1) + ': ' + s.textContent.trim(); }).join('\n');
 
-  var unsicherListe = Array.isArray(p.unsicher) ? p.unsicher.filter(Boolean) : [];
+  var unsicherListe = Array.isArray((letztesProtokoll.protokoll||{}).unsicher)
+    ? letztesProtokoll.protokoll.unsicher.filter(Boolean) : [];
 
   var bericht = {
-    datum: $('datum').value,                    // welcher Arbeitstag - kommt bewusst aus dem Datumsfeld, nicht aus der Anzeige
+    datum: $('datum').value,
     baustelle_text: baustelleFinal,
     mitarbeiter_spitzname: nameFinal,
-    rolle: rolleFinal,
-    taetigkeiten: $('pGespraech').innerText.trim(),
-    stichworte: $('pStichworte').innerText.trim(),
-    material: materialZeilen,
-    auffaelligkeiten: $('pAuffaellig').innerText.trim(),
-    zeitschaetzung: $('pZeit').innerText.trim(),
+    rolle: ich.rolle,
+    wasser: $('pWasser').innerText.trim(),
+    strom: $('pStrom').innerText.trim(),
+    schluessel: $('pSchluessel').innerText.trim(),
+    ansprechpartner: $('pAnsprechpartner').innerText.trim(),
+    hoehen: $('pHoehen').innerText.trim(),
+    material: $('pMaterial').innerText.trim(),
     transkript: letztesProtokoll.transkript || '',
     notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
     fotos_anzahl: fotos.length,
     aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
     unsichere_begriffe: unsicherListe.join(', '),
-    geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
+    geprueft: unsicherListe.length === 0,
     abgeschlossen: true
   };
-  // Wurde dieser Tag vom Büro zur Bearbeitung freigegeben, wird genau dieser
-  // Bericht überschrieben (Id mitgeschickt) statt ein neuer angelegt.
-  if (vorhandenerBerichtId) bericht.Id = vorhandenerBerichtId;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
-      aktion: 'bautagebuch_speichern',
+      aktion: 'baueinweisung_speichern',
       bericht: bericht
     })
   })
@@ -1379,11 +970,10 @@ $('ablegen').addEventListener('click', function(){
 $('neueAufnahme').addEventListener('click', function(){
   // Für die Fälle, wo die Aufnahme misslingt oder das Protokoll nicht passt -
   // Baustelle und Datum bleiben stehen, nur Aufnahme/Fotos/Protokoll fliegen raus.
-  // Erspart bei zwei, drei Versuchen das erneute Einstellen, besonders bei Nachträgen.
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
-  kategorieAuswahl = {};
-  kategorienZeichnen();
+  BE_FELDER.forEach(function(id){ $(id).value = ''; });
+  pruefeTippenBereit();
   $('uhr').textContent = '0:00';
   $('mikroText').textContent = 'Antippen zum Starten';
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
@@ -1395,11 +985,11 @@ $('neueAufnahme').addEventListener('click', function(){
 $('nochmal').addEventListener('click', function(){
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
-  kategorieAuswahl = {};
-  kategorienZeichnen();
+  BE_FELDER.forEach(function(id){ $(id).value = ''; });
   $('uhr').textContent = '0:00';
   $('mikroText').textContent = 'Antippen zum Starten';
   $('notiz').value = '';
+  $('baustelle').value = '';
   $('datum').value = heuteIso();
   datumGewechselt();
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
