@@ -182,6 +182,10 @@
     border-radius:8px;padding:13px 15px;margin-bottom:18px;
   }
   .freigabeHinweis p{margin:0;font-size:13.5px;line-height:1.5;color:#2A5C8A;}
+  .freigabeSpruch{
+    font-family:'Oswald',sans-serif;font-weight:500;font-size:15px;
+    color:var(--tinte)!important;margin-bottom:6px!important;
+  }
   .freigabeHinweis p + p{margin-top:6px;}
   .freigabeHinweis a{color:var(--rot);font-weight:600;text-decoration:none;}
   .freigabeHinweis a:hover{text-decoration:underline;}
@@ -591,6 +595,19 @@ const FREIGABE_QUELLEN = [
   { aktion:'baueinweisung_laden', ziel:'baueinweisung.html', label:'Baueinweisung' }
 ];
 
+/* Fürs Erinnern an fehlende/offene Bautagebücher - lieber ein Spruch als
+   ein Vorwurf. Wechselt zufällig bei jedem Laden. */
+const ERINNERUNGS_SPRUECHE = [
+  '🔨 Ohne Protokoll kein Geld.',
+  '📋 Erst dokumentiert, dann Feierabend.',
+  '🖌️ Farbe auf der Wand reicht nicht — auch aufs Papier damit.',
+  '📝 Kelle sauber, Bautagebuch leer? Geht so nicht.',
+  '⏰ Fertig ist erst, wenn\u2019s auch eingetragen ist.',
+  '💰 Kein Bautagebuch, keine Abrechnung.',
+  '🧾 Auch die beste Arbeit will festgehalten werden.',
+  '🛠️ Handwerk ohne Doku ist nur die halbe Miete.'
+];
+
 async function freigabenPruefen(vorname){
   if (CONFIG.DEMO_MODUS) return;   // im Demo-Modus keine echten Serverdaten
   const box = $('#freigabeHinweis');
@@ -614,11 +631,14 @@ async function freigabenPruefen(vorname){
 
     if (!treffer.length){ box.hidden = true; return; }
 
+    const spruch = ERINNERUNGS_SPRUECHE[Math.floor(Math.random() * ERINNERUNGS_SPRUECHE.length)];
     const tokenTeil = location.search || '';
-    box.innerHTML = treffer.map(t =>
-      `<p>📋 <strong>${t.label}</strong> vom ${t.datum} (${escapeHtml(t.baustelle)}) braucht noch deine
-       Aufmerksamkeit — <a href="${t.ziel}${tokenTeil}">jetzt nachtragen</a>.</p>`
-    ).join('');
+    box.innerHTML =
+      `<p class="freigabeSpruch">${spruch}</p>` +
+      treffer.map(t =>
+        `<p><strong>${t.label}</strong> vom ${t.datum} (${escapeHtml(t.baustelle)}) —
+         <a href="${t.ziel}${tokenTeil}">jetzt nachtragen</a>.</p>`
+      ).join('');
     box.hidden = false;
   }catch(e){
     box.hidden = true;
