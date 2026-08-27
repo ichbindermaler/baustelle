@@ -367,6 +367,13 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <span id="werName">…</span>
   </div>
 
+  <div class="eingabe verborgen" id="blockMitarbeiterZiel">
+    <label for="mitarbeiterZiel">Für welchen Mitarbeiter — Nachtrag ausm Büro</label>
+    <select id="mitarbeiterZiel">
+      <option value="">— auswählen —</option>
+    </select>
+  </div>
+
   <div class="eingabe">
     <label for="datum">Für welchen Tag</label>
     <input type="date" id="datum"
@@ -577,7 +584,7 @@ function einsatzFuerDatum(iso){
   var tage = ['mo','di','mi','do','fr'];
   var woche = wochenDaten[weekKeyOf(mondayOfDate(d))];
   if (!woche || !woche.rows) return '';
-  var zeile = woche.rows.filter(function(r){ return r.name === ich.vorname; })[0];
+  var zeile = woche.rows.filter(function(r){ return r.name === aktuellerMitarbeiter(); })[0];
   return zeile ? (zeile[tage[wt]] || '') : '';
 }
 
@@ -619,6 +626,7 @@ function starteSeite(){
     einsatzLaden();
     vorhandenenBerichtPruefen();
     baueinweisungenLaden();
+    mitarbeiterZielLaden();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
@@ -639,7 +647,8 @@ function vorhandenenBerichtPruefen(){
   vorhandenerBerichtId = null;
   vorhandenerBerichtArchiviert = false;
   $('vorhandenerHinweis').classList.add('verborgen');
-  if (!ich.vorname) return;
+  var ziel = aktuellerMitarbeiter();
+  if (!ziel) return;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -649,7 +658,7 @@ function vorhandenenBerichtPruefen(){
   .then(function(d){
     var alle = (d && d.berichte) ? d.berichte : [];
     var treffer = alle.filter(function(b){
-      return b.datum === $('datum').value && b.mitarbeiter_spitzname === ich.vorname;
+      return b.datum === $('datum').value && b.mitarbeiter_spitzname === ziel;
     })[0];
     if (!treffer) return;
 
@@ -671,6 +680,43 @@ function vorhandenenBerichtPruefen(){
   })
   .catch(function(){});
 }
+
+/* Nur Büro (und Inhaber, der ja alles darf) bekommt das Dropdown - für alle
+   anderen bleibt es unsichtbar, die tragen ja weiterhin nur für sich selbst
+   ein. Liefert überall den richtigen Namen: die Auswahl, falls sichtbar
+   und getroffen, sonst die eingeloggte Person selbst. */
+function aktuellerMitarbeiter(){
+  if ((ich.rolle === 'buero' || ich.rolle === 'inhaber') && $('mitarbeiterZiel').value){
+    return $('mitarbeiterZiel').value;
+  }
+  return ich.vorname;
+}
+
+function mitarbeiterZielLaden(){
+  if (ich.rolle !== 'buero' && ich.rolle !== 'inhaber') return;
+  $('blockMitarbeiterZiel').classList.remove('verborgen');
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'stammdaten_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var namen = (d && d.mitarbeiter) ? d.mitarbeiter : [];
+    $('mitarbeiterZiel').innerHTML =
+      '<option value="">— auswählen —</option>' +
+      namen.map(function(n){ return '<option>' + escape(n) + '</option>'; }).join('');
+  })
+  .catch(function(){});
+}
+$('mitarbeiterZiel').addEventListener('change', function(){
+  // Zielperson gewechselt - Abwesenheits-Sperre und "vorhandener Bericht"
+  // müssen für die NEUE Person neu geprüft werden, nicht für die alte.
+  baustellenZeichnen();
+  vorhandenenBerichtPruefen();
+  pruefeBereit();
+  pruefeTippenBereit();
+});
 
 function baustellenLaden(){
   fetch(BUERO, {
@@ -935,7 +981,7 @@ function pruefeTippenBereit(){
     var d = kategorieAuswahl[k];
     return d.schritte.length > 0 || d.text.trim() !== '';
   });
-  $('tippenErstellen').disabled = !($('baustelle').value && gefuellt);
+  $('tippenErstellen').disabled = !($('baustelle').value && gefuellt && aktuellerMitarbeiter());
 }
 
 function modusUmschalten(neu){
@@ -963,7 +1009,7 @@ $('tippenErstellen').addEventListener('click', function(){
   });
   aufbauen({
     baustelle: $('baustelle').value,
-    mitarbeiter: ich.vorname,
+    mitarbeiter: aktuellerMitarbeiter(),
     rolle: ich.rolle,
     dauer: 0,
     transkript: '',
@@ -1085,7 +1131,7 @@ function verkleinern(datei, fertig){
 
 /* ===== Absenden ===== */
 function pruefeBereit(){
-  $('senden').disabled = !(audioBlob && $('baustelle').value && ich.vorname);
+  $('senden').disabled = !(audioBlob && $('baustelle').value && aktuellerMitarbeiter());
 }
 $('baustelle').addEventListener('change', pruefeBereit);
 $('baustelle').addEventListener('change', pruefeTippenBereit);
@@ -1118,7 +1164,7 @@ $('senden').addEventListener('click', function(){
         dauer: sekunden,
         fotos: fotos.length,
         baustelle: $('baustelle').value,
-        mitarbeiter: ich.vorname,
+        mitarbeiter: aktuellerMitarbeiter(),
         rolle: ich.rolle,
         datum: $('datum').value,
         notiz: $('notiz').value
@@ -1316,7 +1362,7 @@ $('ablegen').addEventListener('click', function(){
   // dessen Korrektur soll auch wirklich gespeichert werden. Rolle wird
   // nicht mehr angezeigt/editiert, kommt direkt aus dem Mitarbeiter-Token.
   var baustelleFinal = $('pObjekt').textContent.trim() || $('baustelle').value;
-  var nameFinal = $('pWer').textContent.trim() || ich.vorname;
+  var nameFinal = $('pWer').textContent.trim() || aktuellerMitarbeiter();
   var rolleFinal = ich.rolle;
 
   var materialZeilen = Array.prototype.map.call(
