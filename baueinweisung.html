@@ -214,6 +214,10 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
 }
 .leisteHaupt .hinweis{font-size:12.5px;color:var(--grau);flex:1 1 100%;order:-1;}
+.buero-grund{
+  background:#FBEFEC;border:1px solid #F0D5CE;border-left:3px solid var(--rot);
+  border-radius:8px;padding:11px 14px;margin:0 20px 14px;font-size:13.5px;line-height:1.5;
+}
 .knopfGross{
   width:100%;font-size:17px;font-weight:600;padding:15px 20px;
   border-radius:12px;box-shadow:0 3px 10px rgba(226,0,26,.22);
@@ -581,10 +585,63 @@ function starteSeite(){
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
     baustellenLaden();
+    berichtWiederAufnehmen();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
+}
+
+/* Kommt man über den Hinweis-Link von der Startseite (mit ?bericht=ID),
+   wird der bestehende, vom Büro zur Bearbeitung freigegebene Eintrag
+   direkt geladen und ausgefüllt - kein Rate-Aufwand, keine Dopplung
+   beim erneuten Absenden (Id wird mitgeschickt, dann PATCH statt POST). */
+var wiederaufnahmeId = null;
+
+function berichtWiederAufnehmen(){
+  var id = new URLSearchParams(location.search).get('bericht');
+  if (!id) return;
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'baueinweisung_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var treffer = ((d && d.berichte) || []).filter(function(b){ return String(b.Id) === String(id); })[0];
+    if (!treffer) return;
+
+    wiederaufnahmeId = treffer.Id;
+    $('datum').value = treffer.datum || heuteIso();
+    datumGewechselt();
+
+    // Sobald die Baustellenliste da ist, die richtige vorauswählen
+    var vorauswahlIntervall = setInterval(function(){
+      if (!alleBaustellen.length) return;
+      clearInterval(vorauswahlIntervall);
+      baustellenZeichnen();
+      $('baustelle').value = treffer.baustelle_text || '';
+
+      aufbauen({
+        baustelle: treffer.baustelle_text, mitarbeiter: treffer.mitarbeiter_spitzname,
+        rolle: treffer.rolle, dauer: 0, transkript: treffer.transkript || '',
+        protokoll: {
+          wasser: treffer.wasser, strom: treffer.strom, schluessel: treffer.schluessel,
+          ansprechpartner: treffer.ansprechpartner, hoehen: treffer.hoehen,
+          material: treffer.material, unsicher: []
+        }
+      });
+      zeige('ansichtProtokoll');
+
+      if (treffer.notiz){
+        var hinweis = document.createElement('div');
+        hinweis.className = 'buero-grund';
+        hinweis.innerHTML = '<strong>Hinweis vom Büro:</strong> ' + escape(treffer.notiz);
+        document.querySelector('.leisteHaupt').insertAdjacentElement('afterend', hinweis);
+      }
+    }, 100);
+  })
+  .catch(function(){});
 }
 
 function baustellenLaden(){
@@ -971,6 +1028,7 @@ $('ablegen').addEventListener('click', function(){
     geprueft: unsicherListe.length === 0,
     abgeschlossen: true
   };
+  if (wiederaufnahmeId) bericht.Id = wiederaufnahmeId;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},

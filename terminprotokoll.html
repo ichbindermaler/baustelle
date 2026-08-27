@@ -202,6 +202,10 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
 }
 .leisteHaupt .hinweis{font-size:12.5px;color:var(--grau);flex:1 1 100%;order:-1;}
+.buero-grund{
+  background:#FBEFEC;border:1px solid #F0D5CE;border-left:3px solid var(--rot);
+  border-radius:8px;padding:11px 14px;margin:0 20px 14px;font-size:13.5px;line-height:1.5;
+}
 .knopfGross{
   width:100%;font-size:17px;font-weight:600;padding:15px 20px;
   border-radius:12px;box-shadow:0 3px 10px rgba(226,0,26,.22);
@@ -363,6 +367,12 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <option value="">— lädt … —</option>
     </select>
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
+  </div>
+
+  <div class="eingabe verborgen" id="blockTermingrundFrei">
+    <label for="termingrundFrei">Was genau — neue Baustelle, Anfrage, o.ä.</label>
+    <input type="text" id="termingrundFrei" placeholder="z.B. Erstbesichtigung Musterstraße 5, Hennef — Anfrage über Empfehlung"
+      style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
   </div>
 
   <div class="mikro" id="blockSprechen">
@@ -541,10 +551,70 @@ function starteSeite(){
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
     baustellenLaden();
+    berichtWiederAufnehmen();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
+}
+
+/* Kommt man über den Hinweis-Link von der Startseite (mit ?bericht=ID),
+   wird der bestehende, vom Büro zur Bearbeitung freigegebene Eintrag
+   direkt geladen und ausgefüllt - kein Rate-Aufwand, keine Dopplung
+   beim erneuten Absenden (Id wird mitgeschickt, dann PATCH statt POST). */
+var wiederaufnahmeId = null;
+
+function berichtWiederAufnehmen(){
+  var id = new URLSearchParams(location.search).get('bericht');
+  if (!id) return;
+
+  fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ aktion:'terminprotokoll_laden' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var treffer = ((d && d.berichte) || []).filter(function(b){ return String(b.Id) === String(id); })[0];
+    if (!treffer) return;
+
+    wiederaufnahmeId = treffer.Id;
+    $('datum').value = treffer.datum || heuteIso();
+    datumGewechselt();
+
+    var vorauswahlIntervall = setInterval(function(){
+      if (!alleBaustellen.length) return;
+      clearInterval(vorauswahlIntervall);
+      baustellenZeichnen();
+      $('baustelle').value = treffer.baustelle_text || '';
+
+      aufbauen({
+        baustelle: treffer.baustelle_text, mitarbeiter: treffer.mitarbeiter_spitzname,
+        rolle: treffer.rolle, dauer: 0, transkript: treffer.transkript || '',
+        protokoll: {
+          anlass: treffer.anlass, anwesend: treffer.anwesend,
+          gespraech: treffer.gespraech ? [treffer.gespraech] : [],
+          technik: [], punkte: [], unsicher: []
+        }
+      });
+      zeige('ansichtProtokoll');
+
+      // Technik/Punkte kamen als reiner Text zurueck (siehe ablegen-Handler) -
+      // fuer die Wiederaufnahme reicht es, sie als Fliesstext in die
+      // jeweils erste Zeile zu setzen, statt die Tabellenstruktur zu raten.
+      if (treffer.technik) $('pTechnik').innerHTML = technikZeileHtml(treffer.technik, '');
+      if (treffer.punkte) $('pPunkte').innerHTML = punkteZeileHtml(treffer.punkte, '', '');
+      materialLeerHinweisAktualisieren();
+      punkteLeerHinweisAktualisieren();
+
+      if (treffer.notiz){
+        var hinweis = document.createElement('div');
+        hinweis.className = 'buero-grund';
+        hinweis.innerHTML = '<strong>Hinweis vom Büro:</strong> ' + escape(treffer.notiz);
+        document.querySelector('.leisteHaupt').insertAdjacentElement('afterend', hinweis);
+      }
+    }, 100);
+  })
+  .catch(function(){});
 }
 
 function baustellenLaden(){
@@ -567,6 +637,24 @@ function baustellenLaden(){
     baustellenZeichnen();
   });
 }
+
+/* Liefert den tatsächlichen Namen für "wo war der Termin" - bei "Neues
+   Objekt" der frei eingetippte Text, sonst die Auswahl selbst. Überall
+   nutzen, wo bisher $('baustelle').value direkt gebraucht wurde. */
+function aktuelleBaustelle(){
+  var wert = $('baustelle').value;
+  if (wert === 'neu') return $('termingrundFrei').value.trim();
+  return wert;
+}
+
+function baustelleUmschalten(){
+  var istNeu = $('baustelle').value === 'neu';
+  $('blockTermingrundFrei').classList.toggle('verborgen', !istNeu);
+  pruefeBereit();
+  pruefeTippenBereit();
+}
+$('baustelle').addEventListener('change', baustelleUmschalten);
+$('termingrundFrei').addEventListener('input', function(){ pruefeBereit(); pruefeTippenBereit(); });
 
 function baustellenZeichnen(){
   var gewaehlt = $('baustelle').value;
@@ -593,7 +681,7 @@ function datumGewechselt(){
 
 function pruefeTippenBereit(){
   var gefuellt = $('tpAnlass').value.trim() || $('tpGespraech').value.trim();
-  $('tippenErstellen').disabled = !($('baustelle').value && gefuellt);
+  $('tippenErstellen').disabled = !(aktuelleBaustelle() && gefuellt);
 }
 $('tpAnlass').addEventListener('input', pruefeTippenBereit);
 $('tpGespraech').addEventListener('input', pruefeTippenBereit);
@@ -611,7 +699,7 @@ document.querySelectorAll('.modusKnopf').forEach(function(b){
 
 $('tippenErstellen').addEventListener('click', function(){
   aufbauen({
-    baustelle: $('baustelle').value,
+    baustelle: aktuelleBaustelle(),
     mitarbeiter: ich.vorname,
     rolle: ich.rolle,
     dauer: 0,
@@ -734,10 +822,8 @@ function verkleinern(datei, fertig){
 
 /* ===== Absenden ===== */
 function pruefeBereit(){
-  $('senden').disabled = !(audioBlob && $('baustelle').value && ich.vorname);
+  $('senden').disabled = !(audioBlob && aktuelleBaustelle() && ich.vorname);
 }
-$('baustelle').addEventListener('change', pruefeBereit);
-$('baustelle').addEventListener('change', pruefeTippenBereit);
 
 function fehlerZeigen(text){
   $('fehler').textContent = text;
@@ -766,7 +852,7 @@ $('senden').addEventListener('click', function(){
         mime: audioMime,
         dauer: sekunden,
         fotos: fotos.length,
-        baustelle: $('baustelle').value,
+        baustelle: aktuelleBaustelle(),
         mitarbeiter: ich.vorname,
         rolle: ich.rolle,
         datum: $('datum').value,
@@ -963,7 +1049,7 @@ $('ablegen').addEventListener('click', function(){
   // Wichtig: Wer im gedruckten Protokoll etwas korrigiert hat, dessen
   // Korrektur soll auch wirklich gespeichert werden. Rolle kommt direkt
   // aus dem Mitarbeiter-Token, nicht angezeigt/editiert.
-  var baustelleFinal = $('pObjekt').textContent.trim() || $('baustelle').value;
+  var baustelleFinal = $('pObjekt').textContent.trim() || aktuelleBaustelle();
   var nameFinal = $('pWer').textContent.trim() || ich.vorname;
 
   var technikZeilen = Array.prototype.map.call(
@@ -1010,6 +1096,7 @@ $('ablegen').addEventListener('click', function(){
     geprueft: unsicherListe.length === 0,
     abgeschlossen: true
   };
+  if (wiederaufnahmeId) bericht.Id = wiederaufnahmeId;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -1054,6 +1141,8 @@ $('nochmal').addEventListener('click', function(){
   $('mikroText').textContent = 'Antippen zum Starten';
   $('notiz').value = '';
   $('baustelle').value = '';
+  $('termingrundFrei').value = '';
+  $('blockTermingrundFrei').classList.add('verborgen');
   $('datum').value = heuteIso();
   datumGewechselt();
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
