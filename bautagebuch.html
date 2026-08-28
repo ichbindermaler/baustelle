@@ -173,6 +173,7 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   display:flex;align-items:center;justify-content:center;
 }
 .fotoKnopf:focus-visible{outline:2px solid var(--rot);outline-offset:2px;}
+.fotoBaldHinweis{font-size:12px;color:var(--grau);font-style:italic;margin:8px 0 0;}
 
 .senden{
   width:100%;margin-top:24px;padding:16px;border:none;border-radius:100px;
@@ -224,6 +225,10 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
 }
 .leisteHaupt .hinweis{font-size:12.5px;color:var(--grau);flex:1 1 100%;order:-1;}
+.buero-grund{
+  background:#FBEFEC;border:1px solid #F0D5CE;border-left:3px solid var(--rot);
+  border-radius:8px;padding:11px 14px;margin:0 20px 14px;font-size:13.5px;line-height:1.5;
+}
 .knopfGross{
   width:100%;font-size:17px;font-weight:600;padding:15px 20px;
   border-radius:12px;box-shadow:0 3px 10px rgba(226,0,26,.22);
@@ -379,7 +384,6 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <input type="date" id="datum"
       style="width:100%;font-family:'Inter',sans-serif;font-size:16px;color:var(--tinte);background:var(--blatt);border:1px solid var(--linie);border-radius:8px;padding:12px 14px;">
     <div class="nachtragHinweis verborgen" id="nachtragHinweis"></div>
-    <div class="vorhandenerHinweis verborgen" id="vorhandenerHinweis"></div>
   </div>
 
   <div class="abwesenheit verborgen" id="abwesenheit"></div>
@@ -418,7 +422,8 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <div class="fotoLeiste" id="fotoLeiste">
       <button class="fotoKnopf" id="fotoKnopf" aria-label="Foto hinzufügen">+</button>
     </div>
-    <input type="file" id="fotoEingabe" accept="image/*" multiple capture="environment" style="display:none">
+    <input type="file" id="fotoEingabe" accept="image/*" multiple style="display:none">
+    <p class="fotoBaldHinweis">📷 Dauerhafte Ablage der Fotos kommt bald — aktuell nur für dieses Protokoll sichtbar.</p>
   </div>
 
   <div class="eingabe">
@@ -624,31 +629,28 @@ function starteSeite(){
     $('werName').textContent = ich.vorname;
     baustellenLaden();
     einsatzLaden();
-    vorhandenenBerichtPruefen();
     baueinweisungenLaden();
     mitarbeiterZielLaden();
+    berichtWiederAufnehmen();
   })
   .catch(function(){
     $('werName').textContent = 'Zugang nicht erkannt – bitte im Büro melden';
   });
 }
 
-/* Prüft, ob für den gewählten Tag schon ein Bericht dieser Person existiert -
-   verhindert doppelte Einträge, egal ob per Sprache oder Tippen erzeugt.
-   - abgeschlossen (archiviert): Warnung, aber nicht automatisch geladen -
-     die Archiv-Grenze respektiert, dass das Büro es erst freigeben muss.
-   - nicht abgeschlossen (vom Büro zur Bearbeitung freigegeben, oder ein
-     nie abgeschlossener Rest): wird direkt geladen, ein neuer Versuch
-     überschreibt genau diesen einen Bericht statt einen zweiten anzulegen. */
-var vorhandenerBerichtId = null;
-var vorhandenerBerichtArchiviert = false;
+/* Mehrere Bautagebücher pro Tag sind normal - eine Person kann mehrmals am
+   Tag was reinsprechen (z.B. nach jedem Arbeitsschritt), jede Aufnahme geht
+   sofort einzeln ans Büro. Deshalb keine Tages-Sperre mehr.
+   Kommt man über den Hinweis-Link von der Startseite (mit ?bericht=ID),
+   wird genau der freigegebene Bericht geladen und ausgefüllt - kein
+   Rate-Aufwand, keine Dopplung beim erneuten Absenden (Id wird
+   mitgeschickt, dann PATCH statt POST). Gleiches Muster wie bei
+   terminprotokoll.html und baueinweisung.html. */
+var wiederaufnahmeId = null;
 
-function vorhandenenBerichtPruefen(){
-  vorhandenerBerichtId = null;
-  vorhandenerBerichtArchiviert = false;
-  $('vorhandenerHinweis').classList.add('verborgen');
-  var ziel = aktuellerMitarbeiter();
-  if (!ziel) return;
+function berichtWiederAufnehmen(){
+  var id = new URLSearchParams(location.search).get('bericht');
+  if (!id) return;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -656,27 +658,44 @@ function vorhandenenBerichtPruefen(){
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
-    var alle = (d && d.berichte) ? d.berichte : [];
-    var treffer = alle.filter(function(b){
-      return b.datum === $('datum').value && b.mitarbeiter_spitzname === ziel;
-    })[0];
+    var treffer = ((d && d.berichte) || []).filter(function(b){ return String(b.Id) === String(id); })[0];
     if (!treffer) return;
 
-    if (treffer.abgeschlossen){
-      vorhandenerBerichtArchiviert = true;
-      $('vorhandenerHinweis').textContent =
-        'Für diesen Tag ist schon ein Bericht ans Büro geschickt worden (' + (treffer.baustelle_text || '') +
-        '). Ein neuer Eintrag legt einen zusätzlichen Bericht an - falls der bestehende korrigiert ' +
-        'werden soll, bitte im Büro Bescheid geben.';
-      $('vorhandenerHinweis').className = 'vorhandenerHinweis warnung';
-    } else {
-      vorhandenerBerichtId = treffer.Id;
-      $('vorhandenerHinweis').textContent =
-        'Für diesen Tag gibt es schon einen Eintrag, der zur Bearbeitung freigegeben ist (' +
-        (treffer.baustelle_text || '') + '). Was du jetzt erstellst, ersetzt genau diesen Bericht.';
-      $('vorhandenerHinweis').className = 'vorhandenerHinweis info';
-    }
-    $('vorhandenerHinweis').classList.remove('verborgen');
+    wiederaufnahmeId = treffer.Id;
+    $('datum').value = treffer.datum || heuteIso();
+    datumGewechselt();
+
+    var vorauswahlIntervall = setInterval(function(){
+      if (!alleBaustellen.length) return;
+      clearInterval(vorauswahlIntervall);
+      baustellenZeichnen();
+      $('baustelle').value = treffer.baustelle_text || '';
+      baueinweisungAnzeigen();
+
+      aufbauen({
+        baustelle: treffer.baustelle_text, mitarbeiter: treffer.mitarbeiter_spitzname,
+        rolle: treffer.rolle, dauer: 0, transkript: treffer.transkript || '',
+        protokoll: {
+          taetigkeiten: treffer.taetigkeiten ? [treffer.taetigkeiten] : [],
+          material: [], auffaelligkeiten: treffer.auffaelligkeiten || '',
+          zeitschaetzung: treffer.zeitschaetzung || '', stichworte: treffer.stichworte || '',
+          unsicher: []
+        }
+      });
+      zeige('ansichtProtokoll');
+
+      if (treffer.material){
+        $('pTechnik').innerHTML = materialZeileHtml({material: treffer.material, menge:''});
+        materialLeerHinweisAktualisieren();
+      }
+
+      if (treffer.notiz){
+        var hinweis = document.createElement('div');
+        hinweis.className = 'buero-grund';
+        hinweis.innerHTML = '<strong>Hinweis vom Büro:</strong> ' + escape(treffer.notiz);
+        document.querySelector('.leisteHaupt').insertAdjacentElement('afterend', hinweis);
+      }
+    }, 100);
   })
   .catch(function(){});
 }
@@ -710,10 +729,9 @@ function mitarbeiterZielLaden(){
   .catch(function(){});
 }
 $('mitarbeiterZiel').addEventListener('change', function(){
-  // Zielperson gewechselt - Abwesenheits-Sperre und "vorhandener Bericht"
-  // müssen für die NEUE Person neu geprüft werden, nicht für die alte.
+  // Zielperson gewechselt - Abwesenheits-Sperre muss für die NEUE Person
+  // neu geprüft werden, nicht für die alte.
   baustellenZeichnen();
-  vorhandenenBerichtPruefen();
   pruefeBereit();
   pruefeTippenBereit();
 });
@@ -881,7 +899,6 @@ function datumGewechselt(){
   }
   $('baustelle').value = '';   // Auswahl vom vorherigen Tag nicht mitschleppen
   baustellenZeichnen();
-  vorhandenenBerichtPruefen();
 }
 
 /* Ein Symbol pro Kategorie, schlichte Strichzeichnung wie im Rest des Systems. */
@@ -1341,15 +1358,6 @@ var legtGerade = false;
 $('ablegen').addEventListener('click', function(){
   if (legtGerade || !letztesProtokoll) return;
 
-  // Für denselben Tag liegt schon ein abgelegter (archivierter) Bericht vor -
-  // hier bewusst nachfragen, damit niemand aus Versehen einen zweiten,
-  // konkurrierenden Bericht für denselben Tag anlegt.
-  if (vorhandenerBerichtArchiviert){
-    var weiter = confirm('Für diesen Tag ist schon ein Bericht ans Büro geschickt worden. ' +
-      'Trotzdem einen zusätzlichen Bericht anlegen?');
-    if (!weiter) return;
-  }
-
   legtGerade = true;
   var knopf = $('ablegen');
   knopf.disabled = true;
@@ -1400,7 +1408,7 @@ $('ablegen').addEventListener('click', function(){
   };
   // Wurde dieser Tag vom Büro zur Bearbeitung freigegeben, wird genau dieser
   // Bericht überschrieben (Id mitgeschickt) statt ein neuer angelegt.
-  if (vorhandenerBerichtId) bericht.Id = vorhandenerBerichtId;
+  if (wiederaufnahmeId) bericht.Id = wiederaufnahmeId;
 
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -1441,6 +1449,8 @@ $('neueAufnahme').addEventListener('click', function(){
 $('nochmal').addEventListener('click', function(){
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
+  wiederaufnahmeId = null;   // komplett neuer, unabhängiger Eintrag
+  document.querySelectorAll('.buero-grund').forEach(function(el){ el.remove(); });
   kategorieAuswahl = {};
   kategorienZeichnen();
   $('uhr').textContent = '0:00';
