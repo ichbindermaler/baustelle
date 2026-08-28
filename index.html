@@ -351,6 +351,9 @@ const KACHELN = [
   {gruppe:'buero',datei:'baustellen-pflege.html',icon:'liste',name:'Baustellenpflege',
    text:'Baustellen anlegen und pflegen',basis:'buero',
    rollen:['buero','inhaber']},
+  {gruppe:'buero',datei:'gaeb.html',icon:'karte',name:'GAEB',
+   text:'Ausschreibungen hochladen, Submissionsprotokoll erfassen',basis:'buero',
+   rollen:['buero','inhaber']},
   {gruppe:'buero',datei:'was-war-los.html',icon:'liste',name:'Bautagebücher',
    text:'Berichte einsehen, bei Bedarf zur Bearbeitung freigeben',basis:'buero',
    rollen:['meister','buero','inhaber']},
@@ -683,9 +686,13 @@ function inhaltZeichnen(){
   const rest  = meine.filter(k => k !== haupt);
   const zeigtEinsatz = EINSATZ_ROLLEN.includes(rolle);
 
+  const gruppenReihenfolge = rolle === 'buero'
+    ? [GRUPPEN.find(g => g.id === 'buero'), ...GRUPPEN.filter(g => g.id !== 'buero')]
+    : GRUPPEN;
+
   let html = zeigtEinsatz ? einsatzKarteHtml() : '';
   html += haupt ? hauptHtml(haupt) : '';
-  html += GRUPPEN.map((g,i) => {
+  html += gruppenReihenfolge.map((g,i) => {
     const teil = rest.filter(k => k.gruppe === g.id);
     if (!teil.length) return '';
     return `<section class="gruppe auf" style="animation-delay:${.10 + i*.05}s">
