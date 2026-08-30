@@ -160,6 +160,15 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   letter-spacing:.04em;
 }
 .mikroText{font-size:13px;color:var(--grau);margin-top:4px;}
+.nachhoeren{margin-top:14px;width:220px;max-width:90%;height:36px;}
+.kurzWarnung{
+  background:var(--pruef-bg);border:1px solid #E8D5A3;color:var(--pruef);
+  border-radius:8px;padding:12px 14px;margin-bottom:18px;font-size:13.5px;line-height:1.5;
+}
+.kurzWarnung button{
+  background:none;border:none;color:var(--pruef);font-weight:600;text-decoration:underline;
+  cursor:pointer;font-size:inherit;padding:0;
+}
 
 /* Fotos */
 .fotoLeiste{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
@@ -409,6 +418,12 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     </button>
     <div class="uhr" id="uhr">0:00</div>
     <div class="mikroText" id="mikroText">Antippen zum Starten</div>
+    <audio class="nachhoeren verborgen" id="nachhoeren" controls></audio>
+  </div>
+
+  <div class="kurzWarnung verborgen" id="kurzWarnung">
+    ⚠️ Die Aufnahme war sehr kurz — das erkennt die Spracherkennung oft nicht richtig.
+    Am besten <button type="button" id="kurzNochmal">nochmal aufnehmen</button>.
   </div>
 
   <div class="eingabe verborgen" id="blockTippen">
@@ -1071,6 +1086,8 @@ $('knopfMikro').addEventListener('click', function(){
 });
 
 function starten(){
+  $('nachhoeren').classList.add('verborgen');
+  $('kurzWarnung').classList.add('verborgen');
   navigator.mediaDevices.getUserMedia({ audio:true }).then(function(stream){
     // Format je nach Geraet: Android liefert webm, iOS mp4
     var typen = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/aac'];
@@ -1110,7 +1127,25 @@ function stoppen(){
   $('knopfMikro').classList.remove('laeuft');
   $('knopfMikro').setAttribute('aria-label','Aufnahme starten');
   $('mikroText').textContent = 'Aufnahme fertig — antippen für neue Aufnahme';
+
+  // Kurz warten, bis der Blob wirklich fertig ist (onstop-Callback), dann
+  // zum Nachhören anbieten und bei sehr kurzen Aufnahmen direkt warnen -
+  // das ist die häufigste Ursache für unverständliche KI-Ergebnisse.
+  var dieseSekunden = sekunden;
+  setTimeout(function(){
+    if (!audioBlob) return;
+    var url = URL.createObjectURL(audioBlob);
+    var player = $('nachhoeren');
+    player.src = url;
+    player.classList.remove('verborgen');
+
+    $('kurzWarnung').classList.toggle('verborgen', dieseSekunden >= 2);
+  }, 150);
 }
+$('kurzNochmal').addEventListener('click', function(){
+  $('kurzWarnung').classList.add('verborgen');
+  starten();
+});
 
 /* ===== Fotos ===== */
 $('fotoKnopf').addEventListener('click', function(){ $('fotoEingabe').click(); });
@@ -1194,6 +1229,21 @@ $('senden').addEventListener('click', function(){
     .then(function(daten){
       var d = Array.isArray(daten) ? daten[0] : daten;
       if(!d || !d.protokoll) throw new Error('Antwort ohne Protokoll');
+
+      if (klingtNachKauderwelsch(d.transkript)){
+        zeige('ansichtAufnahme');
+        $('kurzWarnung').classList.remove('verborgen');
+        $('kurzWarnung').innerHTML =
+          '⚠️ Die Spracherkennung hat die Aufnahme nicht verstanden (kam nur wirres Zeug raus). ' +
+          'Das passiert manchmal bei zu leiser oder verrauschter Aufnahme — ' +
+          '<button type="button" id="kurzNochmal">bitte nochmal aufnehmen</button>.';
+        $('kurzNochmal').addEventListener('click', function(){
+          $('kurzWarnung').classList.add('verborgen');
+          starten();
+        });
+        return;
+      }
+
       aufbauen(d);
       zeige('ansichtProtokoll');
     })
@@ -1203,6 +1253,19 @@ $('senden').addEventListener('click', function(){
   };
   leser.readAsDataURL(audioBlob);
 });
+
+/* Erkennt das typische Whisper-Aussetzer-Muster bei zu leiser/kurzer
+   Aufnahme: viele "Buchstabe+Zahl"-Fetzen hintereinander (z.B. "a25, q26,
+   f11...") statt echtem Text. Lieber einmal zu vorsichtig warnen als ein
+   Fantasie-Protokoll durchgehen lassen. */
+function klingtNachKauderwelsch(text){
+  text = (text || '').trim();
+  if (!text) return true;   // komplett leer ist auch ein Fehlschlag
+  var fetzen = text.split(/[\s,;.\-]+/).filter(Boolean);
+  if (fetzen.length < 3) return false;   // zu wenig zum sicheren Urteil
+  var treffer = fetzen.filter(function(w){ return /^[a-zA-ZäöüÄÖÜß]{1,3}\d{1,3}$/.test(w); });
+  return (treffer.length / fetzen.length) > 0.5;
+}
 
 /* ===== Protokoll aufbauen ===== */
 function aufbauen(d){
