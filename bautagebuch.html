@@ -513,11 +513,9 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <div class="fliess" contenteditable="true" id="pGespraech"></div>
     </section>
 
-    <section class="block" id="blockTechnik">
+    <section class="block">
       <h2><span class="zaehler">02</span> Verwendetes Material</h2>
-      <p class="materialLeer verborgen" id="materialLeer">Kein Material aus der Aufnahme erkannt — bei Bedarf unten ergänzen.</p>
-      <table class="befund"><tbody id="pTechnik"></tbody></table>
-      <button type="button" class="knopf" id="materialHinzufuegen" style="margin-top:10px;">+ Material hinzufügen</button>
+      <p class="materialLeer">📋 Bitte Material aktuell noch direkt mit Katharina im Büro besprechen (Anruf oder persönlich) — die Eingabe hier kommt bald.</p>
     </section>
 
     <section class="block" id="blockAuffaellig">
@@ -698,11 +696,6 @@ function berichtWiederAufnehmen(){
         }
       });
       zeige('ansichtProtokoll');
-
-      if (treffer.material){
-        $('pTechnik').innerHTML = materialZeileHtml({material: treffer.material, menge:''});
-        materialLeerHinweisAktualisieren();
-      }
 
       if (treffer.notiz){
         var hinweis = document.createElement('div');
@@ -1297,9 +1290,9 @@ function aufbauen(d){
   var t = Array.isArray(p.taetigkeiten) ? p.taetigkeiten : [String(p.taetigkeiten || '')];
   $('pGespraech').innerHTML = t.map(function(a){ return '<p>' + escape(a) + '</p>'; }).join('');
 
-  var mat = Array.isArray(p.material) ? p.material : [];
-  $('pTechnik').innerHTML = mat.map(materialZeileHtml).join('');
-  materialLeerHinweisAktualisieren();
+  // Material-Eingabe vorerst deaktiviert (Katharina bespricht das direkt mit
+  // den Jungs) - die KI erkennt es zwar noch aus der Aufnahme, wird aber
+  // bewusst nicht mehr angezeigt oder mitgeschickt.
 
   var auff = p.auffaelligkeiten || '';
   $('pAuffaellig').innerHTML = auff ? '<p>' + escape(auff) + '</p>' : '';
@@ -1323,39 +1316,11 @@ function aufbauen(d){
 }
 
 /* Unsichere Begriffe im fertigen Text markieren */
-function materialZeileHtml(z){
-  return '<tr><th contenteditable="true">' + escape(z.material || '') + '</th>' +
-    '<td contenteditable="true">' + escape(z.menge || '') + '</td>' +
-    '<td class="materialLoeschCell"><button type="button" class="materialLoeschen" ' +
-    'title="Zeile entfernen" aria-label="Zeile entfernen">✕</button></td></tr>';
-}
-
-function materialLeerHinweisAktualisieren(){
-  var keineZeilen = $('pTechnik').children.length === 0;
-  $('materialLeer').classList.toggle('verborgen', !keineZeilen);
-}
-
-// Löschen per Klick auf das Kreuz - ein Listener für die ganze Tabelle
-// (Delegation), damit auch nachträglich hinzugefügte Zeilen funktionieren.
-$('pTechnik').addEventListener('click', function(ev){
-  var knopf = ev.target.closest('.materialLoeschen');
-  if (!knopf) return;
-  knopf.closest('tr').remove();
-  materialLeerHinweisAktualisieren();
-});
-
-$('materialHinzufuegen').addEventListener('click', function(){
-  $('pTechnik').insertAdjacentHTML('beforeend', materialZeileHtml({material:'', menge:''}));
-  materialLeerHinweisAktualisieren();
-  var neueZeile = $('pTechnik').lastElementChild;
-  neueZeile.querySelector('th').focus();
-});
-
 function markiereUnsicher(liste){
   if(!liste.length){ $('legende').classList.add('verborgen'); return; }
   $('legende').classList.remove('verborgen');
 
-  var bereiche = [$('pGespraech'), $('pTechnik'), $('pAuffaellig')];
+  var bereiche = [$('pGespraech'), $('pAuffaellig')];
   liste.forEach(function(begriff){
     if(!begriff || begriff.length < 2) return;
     bereiche.forEach(function(bereich){
@@ -1436,14 +1401,8 @@ $('ablegen').addEventListener('click', function(){
   var nameFinal = $('pWer').textContent.trim() || aktuellerMitarbeiter();
   var rolleFinal = ich.rolle;
 
-  var materialZeilen = Array.prototype.map.call(
-    document.querySelectorAll('#pTechnik tr'),
-    function(tr){
-      var th = tr.querySelector('th'), td = tr.querySelector('td');
-      var name = th ? th.textContent.trim() : '';
-      var menge = td ? td.textContent.trim() : '';
-      return name ? (name + (menge ? ': ' + menge : '')) : '';
-    }).filter(Boolean).join('\n');
+  // Material-Eingabe vorerst deaktiviert - siehe Hinweis im Protokoll
+  var materialZeilen = '';
 
   var bildunterschriften = Array.prototype.map.call(
     document.querySelectorAll('#pFotos figcaption span'),
