@@ -1467,7 +1467,8 @@ $('ablegen').addEventListener('click', function(){
     aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
     unsichere_begriffe: unsicherListe.join(', '),
     geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
-    abgeschlossen: true
+    abgeschlossen: true,
+    status: 'eingereicht'   // neuer, dreistufiger Büro-Workflow: eingereicht -> geprueft -> archiviert
   };
   // Wurde dieser Tag vom Büro zur Bearbeitung freigegeben, wird genau dieser
   // Bericht überschrieben (Id mitgeschickt) statt ein neuer angelegt.
