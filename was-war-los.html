@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#faf9f7">
+<title>Bautagebücher – Malerbetrieb Bäßgen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rot:#e2001a; --rot-dunkel:#a10e1e;
+  --tinte:#1b1a1f; --grau:#6f6c78;
+  --linie:#e2e0e6; --papier:#f7f4ec; --papier-tief:#efece1;
+  --gruen:#1f8a4c; --gelb:#b7791f; --blau:#2a5c8a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--papier);color:var(--tinte);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  padding-bottom:60px;
+}
+.wrap{max-width:760px;margin:0 auto}
+.head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 14px;border-bottom:4px solid var(--rot);background:#fff;
+}
+.head-marke{display:flex;align-items:center;gap:12px}
+.head-logo{height:42px;width:auto;display:block}
+.head .co{font-family:'Oswald',sans-serif;font-size:18px;font-weight:600}
+.head .since{font-size:11px;color:var(--grau);margin-top:2px}
+.head .doctag{text-align:right}
+.head .doctag .label{font-family:'Oswald',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--rot);font-weight:600}
+.head .doctag .sub{font-size:12px;color:var(--grau);margin-top:2px}
+.doctag-home{display:block;margin-top:5px;font-size:11px;color:var(--grau);text-decoration:none}
+.doctag-home:hover{color:var(--rot);text-decoration:underline}
+.toolbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:14px 20px;background:#fff;border-bottom:1px solid var(--linie);
+}
+#status{font-size:13px;color:var(--grau);flex:1}
+.suche{
+  flex:1;min-width:160px;font-family:'Inter',sans-serif;font-size:15px;
+  padding:9px 12px;border:1px solid var(--linie);border-radius:10px;background:var(--papier);
+}
+.quellenleiste{display:flex;background:#fff;border-bottom:1px solid var(--linie)}
+.quellen-knopf{
+  flex:1;font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;
+  background:none;border:none;border-bottom:3px solid transparent;
+  padding:13px 8px;cursor:pointer;color:var(--grau);
+}
+.quellen-knopf[aria-pressed="true"]{color:var(--rot);border-bottom-color:var(--rot)}
+.filterleiste{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+.filterleiste.verborgen{display:none}
+.berichteLeiste{display:flex;gap:8px;padding:12px 16px 0;flex-wrap:wrap;}
+
+/* Die Druckansicht ist im normalen Betrieb unsichtbar, wird nur für den
+   Moment von window.print() befüllt und danach sofort geleert - so bleibt
+   die eigentliche App-Oberfläche unangetastet. */
+.druckAnsicht{display:none;}
+@media print{
+  body > *:not(.druckAnsicht){display:none !important;}
+  .druckAnsicht{display:block !important;font-family:'Inter',sans-serif;color:#1B1A1F;}
+  .druckAnsicht h1{font-family:'Oswald',sans-serif;font-size:22px;margin:0 0 4px;}
+  .druckAnsicht .druckUnterzeile{color:#6F6C78;font-size:13px;margin-bottom:20px;}
+  .druckAnsicht h2{font-family:'Oswald',sans-serif;font-size:15px;margin:22px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px;}
+  .druckAnsicht table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;}
+  .druckAnsicht th{text-align:left;padding:5px 8px;border-bottom:1px solid #999;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#555;}
+  .druckAnsicht td{padding:5px 8px;border-bottom:1px solid #eee;vertical-align:top;}
+  .druckAnsicht .druckFuss{margin-top:30px;font-size:10.5px;color:#888;border-top:1px solid #ccc;padding-top:10px;}
+}
+.filter-knopf{
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+  background:#fff;border:1px solid var(--linie);border-radius:999px;
+  padding:6px 14px;cursor:pointer;color:var(--tinte);
+}
+.filter-knopf[aria-pressed="true"]{background:var(--tinte);border-color:var(--tinte);color:#fff}
+.filter-knopf:focus-visible{outline:2px solid var(--rot);outline-offset:2px}
+main{padding:16px 16px 40px}
+.karte{
+  background:#fff;border:1px solid var(--linie);border-radius:14px;
+  margin-bottom:12px;overflow:hidden;
+}
+.karten-gruppe{
+  background:var(--papier-tief);border:1px solid var(--linie);border-radius:14px;
+  padding:10px;margin-bottom:12px;
+}
+.karten-gruppe-kopf{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--grau);padding:2px 6px 10px;
+}
+.karten-gruppe .karte{margin-bottom:8px;}
+.karten-gruppe .karte:last-child{margin-bottom:0;}
+.karte-kopf{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;cursor:pointer;
+}
+.karte-titel{font-family:'Oswald',sans-serif;font-weight:600;font-size:17px}
+.karte-unter{font-size:13px;color:var(--grau);margin-top:2px}
+.karte-chips{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+.chip{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:3px 10px;border-radius:999px;white-space:nowrap;
+}
+.chip-archiv{background:var(--papier-tief);color:var(--grau)}
+.chip-bearbeitung{background:#eef0f4;color:var(--blau)}
+.chip-eingereicht{background:#E9F0F7;color:#2A5C8A}
+.chip-geprueft{background:#EAF6EC;color:#2E7D42}
+.chip-archiviert{background:var(--papier-tief);color:var(--grau)}
+.chip-ungeprueft{background:#fbf1de;color:var(--gelb)}
+.karte-form{display:none;padding:4px 16px 16px;border-top:1px solid var(--linie)}
+.karte.offen .karte-form{display:block}
+.karte.offen .pfeil{transform:rotate(90deg)}
+.pfeil{transition:transform .15s ease;color:var(--grau);flex:0 0 auto}
+.feldgruppe{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.feldgruppe.voll{grid-template-columns:1fr}
+@media (max-width:520px){.feldgruppe{grid-template-columns:1fr}}
+label{font-size:12px;font-weight:600;color:var(--grau);display:block;margin-bottom:4px}
+input,textarea{
+  width:100%;font-family:'Inter',sans-serif;font-size:16px;
+  padding:9px 11px;border:1px solid var(--linie);border-radius:9px;
+  background:var(--papier);color:var(--tinte);
+}
+textarea{min-height:60px;resize:vertical}
+textarea.gross{min-height:110px}
+.unsicherHinweis{font-size:12.5px;color:var(--gelb);margin-top:4px}
+.archivHinweis{
+  background:var(--papier-tief);color:var(--grau);font-size:12.5px;
+  border-radius:8px;padding:9px 12px;margin-top:12px;
+}
+.statusHinweis{
+  font-size:12.5px;border-radius:8px;padding:9px 12px;margin-top:12px;
+}
+.status-eingereicht{background:#E9F0F7;color:#2A5C8A;}
+.status-geprueft{background:#EAF6EC;color:#2E7D42;}
+.status-archiviert{background:var(--papier-tief);color:var(--grau);}
+input[readonly],textarea[readonly]{background:var(--papier-tief);color:var(--grau);cursor:default;}
+.karte-aktionen{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;flex-wrap:wrap;gap:10px;
+}
+button.action{
+  font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+  border:1px solid var(--linie);background:#fff;border-radius:10px;
+  padding:10px 16px;cursor:pointer;color:var(--tinte);
+}
+button.action.primary{background:var(--rot);border-color:var(--rot);color:#fff}
+.freigeben{background:none;border:none;color:var(--blau);font-size:13px;cursor:pointer;text-decoration:underline}
+.fehltVersteckte{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--grau);white-space:nowrap;}
+.fehltAbLabel{
+  display:flex;align-items:center;gap:6px;font-size:13px;color:var(--grau);white-space:nowrap;
+}
+.fehltAbLabel input[type="date"]{
+  font-family:'Inter',sans-serif;font-size:13px;color:var(--tinte);
+  border:1px solid var(--linie);border-radius:6px;padding:6px 8px;background:var(--papier);
+}
+.leer{padding:30px;text-align:center;color:var(--grau);font-size:14.5px}
+.massenCheckbox{width:19px;height:19px;flex:none;cursor:pointer;accent-color:var(--rot);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="head-marke">
+      <img class="head-logo" src="data:image/png;base64,__LOGO__" alt="Malerbetrieb Bäßgen">
+      <div>
+        <div class="co">Malerbetrieb Bäßgen</div>
+        <div class="since">seit 1907 · Hennef</div>
+      </div>
+    </div>
+    <div class="doctag">
+      <div class="label">Protokolle</div>
+      <div class="sub">Übersicht im Büro</div>
+      <a class="doctag-home" href="https://baustelle.ichbindeinmaler.de/">🏠 Startseite</a>
+    </div>
+  </div>
+
+  <div class="quellenleiste" id="quellenleiste"></div>
+
+  <div class="toolbar">
+    <span id="status">lädt …</span>
+    <input class="suche" id="suche" placeholder="Suchen …" oninput="zeichnen()">
+  </div>
+
+  <div class="filterleiste" id="filterleiste"></div>
+  <div class="filterleiste" id="fehltFilterleiste" hidden></div>
+  <div class="berichteLeiste" id="berichteLeiste" hidden>
+    <label class="fehltVersteckte" id="alleAuswaehlenWrap"><input type="checkbox" id="alleAuswaehlenBox"> Alle sichtbaren auswählen</label>
+    <span id="auswahlInfo" class="fehltVersteckte" hidden></span>
+    <button type="button" class="action primary" id="knopfAusgewaehlteFreigeben" hidden>Ausgewählte freigeben</button>
+    <button type="button" class="freigeben" id="knopfWochenbericht">📄 Wochenbericht (alle Mitarbeiter)</button>
+    <button type="button" class="freigeben" id="knopfBaustellenbericht">📄 Baustellenbericht (Bautagebuch)</button>
+    <button type="button" class="action primary" id="knopfAlleGeprueft" style="margin-left:auto;">✓ Alle eingereichten als geprüft markieren</button>
+    <button type="button" class="action primary" id="knopfAlleArchivieren">🗄️ Alle geprüften archivieren</button>
+  </div>
+
+  <main id="liste"></main>
+</div>
+
+<div class="druckAnsicht verborgen" id="druckAnsicht"></div>
+
+<script>
+const CONFIG = { WEBHOOK_URL: 'https://n8n.ichbindeinmaler.de/webhook/buero' };
+
+const QUELLEN = {
+  bautagebuch: {
+    titel:'Bautagebücher', laden:'bautagebuch_laden', speichern:'bautagebuch_speichern',
+    dreiStufig:true,   // eingereicht -> geprueft -> archiviert, statt nur Archiv/In Bearbeitung
+    felder:[
+      {feld:'stichworte', label:'Stichworte für WinWorker', mono:true, kopieren:true},
+      {feld:'taetigkeiten', label:'Tätigkeiten', gross:true},
+      {feld:'material', label:'Material'},
+      {feld:'auffaelligkeiten', label:'Auffälligkeiten'},
+      {feld:'zeitschaetzung', label:'Zeitschätzung'}
+    ]
+  },
+  baueinweisung: {
+    titel:'Baueinweisungen', laden:'baueinweisung_laden', speichern:'baueinweisung_speichern',
+    felder:[
+      {feld:'wasser', label:'Wasser'},
+      {feld:'strom', label:'Strom'},
+      {feld:'schluessel', label:'Schlüssel / Zugang'},
+      {feld:'ansprechpartner', label:'Ansprechpartner'},
+      {feld:'hoehen', label:'Höhen / Einschränkungen'},
+      {feld:'material', label:'Mitzubringendes Material'}
+    ]
+  },
+  terminprotokoll: {
+    titel:'Terminprotokolle', laden:'terminprotokoll_laden', speichern:'terminprotokoll_speichern',
+    felder:[
+      {feld:'anlass', label:'Anlass'},
+      {feld:'anwesend', label:'Anwesende'},
+      {feld:'gespraech', label:'Gesprächsverlauf', gross:true},
+      {feld:'technik', label:'Technische Feststellungen', gross:true},
+      {feld:'punkte', label:'Maßnahmen', gross:true}
+    ]
+  },
+  fehlend: { titel:'Fehlt' }   // Sonderfall: keine echten Datensätze, wird berechnet
+};
+
+/* Das sind keine Baustellen - für solche Tage kann kein Bautagebuch fehlen.
+   Muss zu den festen Einträgen in wer-wohin.html passen. */
+const ABWESEND = ['Krank','Urlaub','Schule','Sonstige Abwesenheit','Kurzarbeit'];
+function istAbwesenheit(text){
+  return ABWESEND.some(a => (text||'').toLowerCase().indexOf(a.toLowerCase()) === 0);
+}
+
+function heuteIso(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+/* Montag einer ISO-Kalenderwoche als Datum - Umkehrung der Logik aus
+   wer-wohin.html/bautagebuch.html, muss zu deren Wochenschlüssel passen. */
+function montagVonWochenschluessel(key){
+  const [jahr, woche] = key.split('-').map(Number);
+  const jan4 = new Date(Date.UTC(jahr, 0, 4));
+  const jan4Tag = (jan4.getUTCDay() + 6) % 7;
+  const montagKw1 = new Date(jan4);
+  montagKw1.setUTCDate(jan4.getUTCDate() - jan4Tag);
+  const montag = new Date(montagKw1);
+  montag.setUTCDate(montagKw1.getUTCDate() + (woche - 1) * 7);
+  return montag;
+}
+function isoDatum(d){
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0') + '-' + String(d.getUTCDate()).padStart(2,'0');
+}
+
+/* Fehlende Bautagebücher berechnen: wer stand laut Einsatzplan an einem
+   vergangenen Werktag auf einer echten Baustelle, hat aber (egal in
+   welchem Status) kein Bautagebuch für diesen Tag? "Heute" zählt bewusst
+   nicht mit - der Tag ist ja noch nicht vorbei. Die eigentliche, für das
+   Büro einstellbare Grenze sitzt im Datumsfeld bei fehlendZeichnen() -
+   hier wird großzügig vorberechnet, damit man den Filter auch mal weiter
+   zurückstellen kann, ohne neu laden zu müssen. */
+const FEHLT_TAGE_ZURUECK = 60;
+
+function fehlendeBerechnen(wochenDaten, bautagebuchListe){
+  const heute = heuteIso();
+  const grenze = isoDatum(new Date(Date.now() - FEHLT_TAGE_ZURUECK * 86400000));
+  const tage = ['mo','di','mi','do','fr'];
+  const ergebnis = [];
+
+  Object.keys(wochenDaten).forEach(key => {
+    const montag = montagVonWochenschluessel(key);
+    (wochenDaten[key].rows || []).forEach(zeile => {
+      tage.forEach((tag, i) => {
+        const wert = (zeile[tag] || '').trim();
+        if (!wert || istAbwesenheit(wert)) return;
+        const datumObj = new Date(montag);
+        datumObj.setUTCDate(montag.getUTCDate() + i);
+        const datum = isoDatum(datumObj);
+        if (datum >= heute) return;    // heute und Zukunft nicht anmahnen
+        if (datum < grenze) return;    // zu lange her, nicht mehr relevant
+
+        const vorhanden = bautagebuchListe.some(b =>
+          b.mitarbeiter_spitzname === zeile.name && b.datum === datum);
+        if (!vorhanden){
+          ergebnis.push({ mitarbeiter_spitzname: zeile.name, datum, baustelle_text: wert });
+        }
+      });
+    });
+  });
+
+  return ergebnis.sort((a,b) => b.datum.localeCompare(a.datum));
+}
+
+let quelle = 'bautagebuch';
+let alle = { bautagebuch:[], baueinweisung:[], terminprotokoll:[], fehlend:[] };
+let berichte = [];
+let offenId = null;
+let statusFilter = 'eingereicht'; // 'eingereicht'|'geprueft'|'archiviert'|'alle' (dreistufig) oder 'archiv'|'bearbeitung'|'alle'
+
+/* Mehrfachauswahl fürs Freigeben (nur Bautagebücher-Reiter) - Set aus den
+   gleichen Id-Strings, die auch offenId und die Karten selbst benutzen
+   (String(b.Id || idx)). Bleibt beim Filtern/Suchen erhalten, wird nur
+   beim Wechsel des Reiters oder Neuladen geleert. */
+let ausgewaehlt = new Set();
+let sichtbarIds = [];   // aktuell sichtbare, für Freigeben taugliche Ids - für "Alle sichtbaren auswählen"
+
+function massentauglich(b){ return b.abgeschlossen !== false; }   // "Beim Mitarbeiter" kann nicht nochmal freigegeben werden
+
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+async function ladeQuelle(schluessel){
+  try{
+    const antwort = await fetch(CONFIG.WEBHOOK_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion: QUELLEN[schluessel].laden })
+    });
+    if (!antwort.ok) throw new Error('Server antwortet nicht');
+    const daten = await antwort.json();
+    return (daten.berichte || []).sort((a,b) => (b.datum||'').localeCompare(a.datum||''));
+  }catch(e){
+    console.warn(schluessel, e);
+    return null;   // null = Ladefehler, unterscheidbar von "leer aber ok"
+  }
+}
+
+async function ladeEinsatzplan(){
+  try{
+    const antwort = await fetch(CONFIG.WEBHOOK_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion:'einsatzplan_laden' })
+    });
+    if (!antwort.ok) throw new Error('Server antwortet nicht');
+    const daten = await antwort.json();
+    return (daten && daten.weeks) ? daten.weeks : {};
+  }catch(e){
+    console.warn('einsatzplan', e);
+    return null;
+  }
+}
+
+async function laden(){
+  document.getElementById('status').textContent = 'lädt …';
+  ausgewaehlt.clear();
+  const [bt, be, tp, wochen] = await Promise.all([
+    ladeQuelle('bautagebuch'), ladeQuelle('baueinweisung'), ladeQuelle('terminprotokoll'), ladeEinsatzplan()
+  ]);
+  const fehler = [];
+  alle.bautagebuch = bt ?? (fehler.push('Bautagebücher'), []);
+  alle.baueinweisung = be ?? (fehler.push('Baueinweisungen'), []);
+  alle.terminprotokoll = tp ?? (fehler.push('Terminprotokolle'), []);
+  alle.fehlend = (wochen !== null) ? fehlendeBerechnen(wochen, alle.bautagebuch) : (fehler.push('Einsatzplan-Abgleich'), []);
+  berichte = alle[quelle];
+
+  document.getElementById('status').textContent = fehler.length
+    ? 'Nicht erreichbar: ' + fehler.join(', ')
+    : berichte.length + ' ' + QUELLEN[quelle].titel + ' geladen';
+
+  quellenleisteZeichnen();
+  zeichnen();
+}
+
+/* Für "Fehlt" zählt im Reiter nur, was nach dem Ab-Datum und ohne
+   ignorierte Einträge tatsächlich noch offen ist - nicht die rohe
+   Gesamtzahl seit Anbeginn der Zeit. Für die anderen Quellen bleibt es
+   einfach die Länge der geladenen Liste. */
+function anzahlFuerReiter(schluessel){
+  if (schluessel !== 'fehlend') return alle[schluessel].length;
+  const ignoriert = new Set(ignoriertListe());
+  return alle.fehlend.filter(f =>
+    f.datum >= fehltAbDatumFilter &&
+    (fehltMitarbeiterFilter === 'alle' || f.mitarbeiter_spitzname === fehltMitarbeiterFilter) &&
+    !ignoriert.has(ignoriertSchluessel(f))
+  ).length;
+}
+
+function quellenleisteZeichnen(){
+  const box = document.getElementById('quellenleiste');
+  box.innerHTML = Object.keys(QUELLEN).map(function(k){
+    return `<button class="quellen-knopf" type="button" data-quelle="${k}" aria-pressed="${quelle===k}">${QUELLEN[k].titel} (${anzahlFuerReiter(k)})</button>`;
+  }).join('');
+  box.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      quelle = b.dataset.quelle;
+      berichte = alle[quelle];
+      offenId = null;
+      ausgewaehlt.clear();   // Checkboxen gelten nur innerhalb eines Reiters
+      statusFilter = QUELLEN[quelle].dreiStufig ? 'eingereicht' : 'archiv';
+      document.getElementById('status').textContent = berichte.length + ' ' + QUELLEN[quelle].titel + ' geladen';
+      quellenleisteZeichnen();
+      zeichnen();
+    });
+  });
+  document.getElementById('berichteLeiste').hidden = (quelle !== 'bautagebuch');
+}
+
+function statusVon(b){ return b.status || 'eingereicht'; }   // alte Datensätze ohne status-Feld gelten als frisch eingereicht
+
+function filterleisteZeichnen(){
+  const box = document.getElementById('filterleiste');
+
+  if (QUELLEN[quelle].dreiStufig){
+    const zaehlen = { eingereicht:0, geprueft:0, archiviert:0 };
+    berichte.forEach(b => { zaehlen[statusVon(b)] = (zaehlen[statusVon(b)]||0) + 1; });
+    const optionen = [
+      {schluessel:'eingereicht', label:`Eingereicht (${zaehlen.eingereicht})`},
+      {schluessel:'geprueft', label:`Geprüft (${zaehlen.geprueft})`},
+      {schluessel:'archiviert', label:`Archiviert (${zaehlen.archiviert})`},
+      {schluessel:'alle', label:`Alle (${berichte.length})`}
+    ];
+    box.innerHTML = optionen.map(o =>
+      `<button class="filter-knopf" type="button" data-filter="${o.schluessel}" aria-pressed="${statusFilter===o.schluessel}">${o.label}</button>`
+    ).join('');
+    box.querySelectorAll('button').forEach(b =>
+      b.addEventListener('click', () => { statusFilter = b.dataset.filter; zeichnen(); }));
+    return;
+  }
+
+  const archivAnzahl = berichte.filter(b => b.abgeschlossen).length;
+  const bearbeitungAnzahl = berichte.filter(b => !b.abgeschlossen).length;
+  const optionen = [
+    {schluessel:'archiv', label:`Archiv (${archivAnzahl})`},
+    {schluessel:'bearbeitung', label:`In Bearbeitung (${bearbeitungAnzahl})`},
+    {schluessel:'alle', label:`Alle (${berichte.length})`}
+  ];
+  box.innerHTML = optionen.map(o =>
+    `<button class="filter-knopf" type="button" data-filter="${o.schluessel}" aria-pressed="${statusFilter===o.schluessel}">${o.label}</button>`
+  ).join('');
+  box.querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', () => { statusFilter = b.dataset.filter; zeichnen(); }));
+}
+
+function formHtml(b, idx){
+  const unsicher = (b.unsichere_begriffe || '').trim();
+  const dreiStufig = QUELLEN[quelle].dreiStufig;
+  const felder = QUELLEN[quelle].felder;
+
+  // Für GoBD/Zoll-Zwecke: einmal wirklich "archiviert" (nach Prüfung, PDF
+  // abgelegt) darf sich nichts mehr unbemerkt ändern - erst "Zur Bearbeitung
+  // freigeben" (mit dokumentiertem Grund) macht es wieder änderbar. Vorher
+  // (eingereicht/geprüft) bleibt alles frei bearbeitbar für schnelle Büro-Korrekturen.
+  const gesperrt = dreiStufig && statusVon(b) === 'archiviert';
+  const ro = gesperrt ? 'readonly' : '';
+
+  const feldHtml = felder.map(f => {
+    const wert = esc(b[f.feld]);
+    const stilMono = f.mono ? " style=\"font-family:'IBM Plex Mono',ui-monospace,monospace;\"" : '';
+    const eingabe = f.gross
+      ? `<textarea class="gross" data-feld="${f.feld}" data-idx="${idx}" ${ro}${stilMono}>${wert}</textarea>`
+      : `<input data-feld="${f.feld}" data-idx="${idx}" value="${wert}" ${ro}${stilMono}>`;
+    const kopierKnopf = f.kopieren
+      ? `<button type="button" class="freigeben" style="justify-self:start;" onclick="feldKopieren('${f.feld}', ${idx})">Kopieren</button>`
+      : '';
+    return `<div class="feldgruppe voll${f.kopieren ? ' stichwortZeile' : ''}">
+      <div><label>${f.label}</label>${eingabe}</div>
+      ${kopierKnopf}
+    </div>`;
+  }).join('');
+
+  // Status-Hinweis oben: fürs dreistufige Bautagebuch mit Datum, sonst die
+  // alte Freigabe-Meldung. Büro darf inzwischen immer direkt bearbeiten -
+  // das hier ist nur noch Information, keine Sperre mehr.
+  let statusHinweis = '';
+  if (dreiStufig){
+    const s = statusVon(b);
+    if (s === 'geprueft' && b.geprueft_am){
+      statusHinweis = `<div class="statusHinweis status-geprueft">Geprüft am ${esc(b.geprueft_am)} — wartet auf Archivierung (nur manuell, kein Automatismus). Bis dahin frei bearbeitbar.</div>`;
+    } else if (s === 'archiviert'){
+      statusHinweis = `<div class="statusHinweis status-archiviert">Archiviert${b.geprueft_am ? ' (geprüft am ' + esc(b.geprueft_am) + ')' : ''} — schreibgeschützt. Erst nach „Zur Bearbeitung freigeben" wieder änderbar.</div>`;
+    } else {
+      statusHinweis = `<div class="statusHinweis status-eingereicht">Eingereicht — noch nicht geprüft, frei bearbeitbar.</div>`;
+    }
+  } else if (b.abgeschlossen){
+    statusHinweis = `<div class="archivHinweis">Archiviert.</div>`;
+  }
+
+  return `
+    ${statusHinweis}
+    <div class="feldgruppe">
+      <div><label>Datum</label><input data-feld="datum" data-idx="${idx}" value="${esc(b.datum)}" readonly></div>
+      <div><label>Baustelle</label><input data-feld="baustelle_text" data-idx="${idx}" value="${esc(b.baustelle_text)}" ${ro}></div>
+    </div>
+    <div class="feldgruppe">
+      <div><label>Mitarbeiter</label><input data-feld="mitarbeiter_spitzname" data-idx="${idx}" value="${esc(b.mitarbeiter_spitzname)}" ${ro}></div>
+      <div><label>Rolle</label><input data-feld="rolle" data-idx="${idx}" value="${esc(b.rolle)}" ${ro}></div>
+    </div>
+    ${feldHtml}
+    <div class="feldgruppe">
+      <div><label>Fotos</label><input value="${b.fotos_anzahl||0}" readonly></div>
+      <div></div>
+    </div>
+    <div class="feldgruppe voll"><div><label>Notiz</label><textarea data-feld="notiz" data-idx="${idx}" ${ro}>${esc(b.notiz)}</textarea></div></div>
+    ${unsicher ? `<div class="unsicherHinweis">KI war sich unsicher bei: ${esc(unsicher)}</div>` : ''}
+    <div class="karte-aktionen">
+      ${karteAktionenHtml(b, idx, dreiStufig, gesperrt)}
+    </div>
+  `;
+}
+
+function karteAktionenHtml(b, idx, dreiStufig, gesperrt){
+  const teile = [];
+  if (dreiStufig){
+    const s = statusVon(b);
+    if (s === 'eingereicht') teile.push(`<button class="freigeben" onclick="alsGeprueftMarkieren(${idx})">Als geprüft markieren</button>`);
+    if (s === 'geprueft') teile.push(`<button class="freigeben" onclick="jetztArchivieren(${idx})">Jetzt archivieren</button>`);
+    if (b.abgeschlossen === false){
+      teile.push(`<span style="font-size:13px;color:var(--blau)">Beim Mitarbeiter zur Bearbeitung</span>`);
+    } else {
+      teile.push(`<button class="freigeben" onclick="freigeben(${idx})">Zur Bearbeitung freigeben</button>`);
+    }
+  } else {
+    if (b.abgeschlossen){
+      teile.push(`<button class="freigeben" onclick="freigeben(${idx})">Zur Bearbeitung freigeben</button>`);
+    } else {
+      teile.push(`<span style="font-size:13px;color:var(--blau)">In Bearbeitung — Mitarbeiter kann nachbessern</span>`);
+    }
+  }
+  if (!gesperrt) teile.push(`<button class="action primary" onclick="speichern(${idx})">Speichern</button>`);
+  return teile.join('');
+}
+
+function zeichnen(){
+  const box = document.getElementById('filterleiste');
+  box.classList.toggle('verborgen', quelle === 'fehlend');
+  document.getElementById('fehltFilterleiste').hidden = quelle !== 'fehlend';
+  if (quelle === 'fehlend'){ fehlendZeichnen(); return; }
+
+  filterleisteZeichnen();
+  const filter = document.getElementById('suche').value.trim().toLowerCase();
+  const liste = document.getElementById('liste');
+  const sichtbar = berichte
+    .map((b, idx) => ({b, idx}))
+    .filter(({b}) => {
+      if (QUELLEN[quelle].dreiStufig){
+        if (statusFilter === 'alle') return true;
+        return statusVon(b) === statusFilter;
+      }
+      if (statusFilter === 'archiv') return b.abgeschlossen;
+      if (statusFilter === 'bearbeitung') return !b.abgeschlossen;
+      return true;
+    })
+    .filter(({b}) => !filter ||
+      (b.baustelle_text||'').toLowerCase().includes(filter) ||
+      (b.mitarbeiter_spitzname||'').toLowerCase().includes(filter) ||
+      (b.datum||'').includes(filter));
+
+  if (!sichtbar.length){
+    liste.innerHTML = `<div class="leer">Keine ${QUELLEN[quelle].titel.toLowerCase()} in dieser Ansicht.</div>`;
+    sichtbarIds = [];
+    massenLeisteAktualisieren();
+    return;
+  }
+
+  sichtbarIds = quelle === 'bautagebuch'
+    ? sichtbar.filter(({b}) => massentauglich(b)).map(({b, idx}) => String(b.Id || idx))
+    : [];
+  massenLeisteAktualisieren();
+
+  // Mehrere Einträge derselben Person am selben Tag sind jetzt normal (z.B.
+  // Bautagebuch mehrmals am Tag) - die werden hier nur optisch zusammengefasst,
+  // bleiben aber technisch eigenständige, einzeln bearbeitbare Datensätze.
+  const gruppen = new Map();
+  sichtbar.forEach(eintrag => {
+    const schluessel = eintrag.b.datum + '|' + eintrag.b.mitarbeiter_spitzname;
+    if (!gruppen.has(schluessel)) gruppen.set(schluessel, []);
+    gruppen.get(schluessel).push(eintrag);
+  });
+
+  const karteHtml = ({b, idx}) => {
+    const id = String(b.Id || idx);
+    const offen = offenId === id;
+    const unsicher = (b.unsichere_begriffe || '').trim();
+    const zeigCheckbox = quelle === 'bautagebuch' && massentauglich(b);
+    const checkboxHtml = zeigCheckbox
+      ? `<input type="checkbox" class="massenCheckbox" data-id="${id}" onclick="event.stopPropagation()" onchange="checkboxUmschalten('${id}', this.checked)" ${ausgewaehlt.has(id) ? 'checked' : ''}>`
+      : '';
+    return `
+      <div class="karte ${offen?'offen':''}">
+        <div class="karte-kopf" onclick="umschalten('${id}')">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            ${checkboxHtml}
+            <div>
+              <div class="karte-titel">${esc(b.datum)} · ${esc(b.baustelle_text)}</div>
+              <div class="karte-unter">${esc(b.mitarbeiter_spitzname)}${b.rolle ? ' · ' + esc(b.rolle) : ''}</div>
+            </div>
+          </div>
+          <div class="karte-chips">
+            ${unsicher ? `<span class="chip chip-ungeprueft">Prüfen</span>` : ''}
+            ${QUELLEN[quelle].dreiStufig
+              ? `<span class="chip chip-${statusVon(b)}">${{eingereicht:'Eingereicht',geprueft:'Geprüft',archiviert:'Archiviert'}[statusVon(b)]}</span>`
+              : `<span class="chip ${b.abgeschlossen ? 'chip-archiv' : 'chip-bearbeitung'}">${b.abgeschlossen ? 'Archiv' : 'In Bearbeitung'}</span>`}
+            ${b.abgeschlossen === false ? `<span class="chip chip-bearbeitung">Beim Mitarbeiter</span>` : ''}
+            <span class="pfeil">▶</span>
+          </div>
+        </div>
+        <div class="karte-form">${offen ? formHtml(b, idx) : ''}</div>
+      </div>`;
+  };
+
+  liste.innerHTML = [...gruppen.values()].map(eintraege => {
+    if (eintraege.length === 1) return karteHtml(eintraege[0]);
+    const { b } = eintraege[0];
+    return `
+      <div class="karten-gruppe">
+        <div class="karten-gruppe-kopf">${esc(b.datum)} · ${esc(b.mitarbeiter_spitzname)} — ${eintraege.length} Einträge</div>
+        ${eintraege.map(karteHtml).join('')}
+      </div>`;
+  }).join('');
+
+  liste.querySelectorAll('[data-feld]').forEach(el => {
+    el.addEventListener('input', () => {
+      const idx = +el.dataset.idx;
+      berichte[idx][el.dataset.feld] = el.value;
+    });
+  });
+}
+
+/* "Ignoriert" wird bewusst nur im Browser gemerkt (localStorage), nicht in
+   NocoDB - das ist reine Anzeige-Filterung fürs Büro, keine Aussage
+   darüber, ob der Mitarbeiter wirklich informiert wurde. */
+function ignoriertSchluessel(f){ return f.mitarbeiter_spitzname + '|' + f.datum + '|' + f.baustelle_text; }
+function ignoriertListe(){
+  try{ return JSON.parse(localStorage.getItem('mb_fehlt_ignoriert') || '[]'); }
+  catch(e){ return []; }
+}
+function ignorieren(idx){
+  const f = alle.fehlend[idx];
+  const liste = ignoriertListe();
+  liste.push(ignoriertSchluessel(f));
+  localStorage.setItem('mb_fehlt_ignoriert', JSON.stringify(liste));
+  fehlendZeichnen();
+}
+
+/* Vor diesem Datum lief das Tool noch nicht im echten Einsatz - alles davor
+   kann per Definition nicht "vergessen" worden sein. Das ist der
+   Standardwert im Ab-Datum-Feld, änderbar bei Bedarf. */
+const FEHLT_START_DATUM = '2026-08-30';
+let fehltMitarbeiterFilter = 'alle';
+let fehltAbDatumFilter = FEHLT_START_DATUM;
+
+function fehlendZeichnen(){
+  const ignoriert = new Set(ignoriertListe());
+  const suchfilter = document.getElementById('suche').value.trim().toLowerCase();
+  const liste = document.getElementById('liste');
+
+  const namen = [...new Set(alle.fehlend.map(f => f.mitarbeiter_spitzname))].sort();
+  const filterleisteOben = document.getElementById('fehltFilterleiste');
+  filterleisteOben.hidden = false;
+  filterleisteOben.innerHTML =
+    `<select id="fehltMitarbeiter" class="suche" style="flex:0 0 auto;">
+      <option value="alle">Alle Mitarbeiter</option>
+      ${namen.map(n => `<option value="${esc(n)}" ${fehltMitarbeiterFilter===n?'selected':''}>${esc(n)}</option>`).join('')}
+    </select>
+    <label class="fehltAbLabel">ab <input type="date" id="fehltAbDatum" value="${fehltAbDatumFilter}"></label>
+    <label class="fehltVersteckte"><input type="checkbox" id="fehltVersteckteZeigen"> Ignorierte auch zeigen</label>`;
+  document.getElementById('fehltMitarbeiter').value = fehltMitarbeiterFilter;
+  document.getElementById('fehltMitarbeiter').addEventListener('change', function(){
+    fehltMitarbeiterFilter = this.value;
+    fehlendZeichnen();
+  });
+  document.getElementById('fehltAbDatum').addEventListener('change', function(){
+    // Leeres Feld = keine Untergrenze, ganz zurück bis FEHLT_TAGE_ZURUECK
+    fehltAbDatumFilter = this.value || '0000-00-00';
+    fehlendZeichnen();
+  });
+  const versteckteZeigen = document.getElementById('fehltVersteckteZeigen').checked;
+  document.getElementById('fehltVersteckteZeigen').addEventListener('change', fehlendZeichnen);
+
+  const sichtbar = alle.fehlend
+    .map((f, idx) => ({f, idx}))
+    .filter(({f}) => versteckteZeigen || !ignoriert.has(ignoriertSchluessel(f)))
+    .filter(({f}) => fehltMitarbeiterFilter === 'alle' || f.mitarbeiter_spitzname === fehltMitarbeiterFilter)
+    .filter(({f}) => f.datum >= fehltAbDatumFilter)
+    .filter(({f}) => !suchfilter ||
+      (f.baustelle_text||'').toLowerCase().includes(suchfilter) ||
+      (f.mitarbeiter_spitzname||'').toLowerCase().includes(suchfilter) ||
+      (f.datum||'').includes(suchfilter));
+
+  if (!sichtbar.length){
+    liste.innerHTML = `<div class="leer">Keine fehlenden Bautagebücher in dieser Ansicht.</div>`;
+    return;
+  }
+
+  liste.innerHTML = sichtbar.map(({f, idx}) => {
+    const istIgnoriert = ignoriert.has(ignoriertSchluessel(f));
+    return `
+    <div class="karte">
+      <div class="karte-kopf" style="cursor:default;${istIgnoriert ? 'opacity:.45;' : ''}">
+        <div>
+          <div class="karte-titel">${esc(f.datum)} · ${esc(f.baustelle_text)}</div>
+          <div class="karte-unter">${esc(f.mitarbeiter_spitzname)}${istIgnoriert ? ' · ignoriert' : ''}</div>
+        </div>
+        <div class="karte-chips" style="gap:8px;">
+          ${f.erinnert
+            ? `<span class="chip chip-archiv">Erinnert ✓</span>`
+            : `<button class="freigeben" onclick="ignorieren(${idx})">Ignorieren</button>
+               <button class="action primary" onclick="erinnern(${idx})">Erinnern</button>`}
+        </div>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+async function erinnern(idx){
+  const f = alle.fehlend[idx];
+  const heute = heuteIso();
+  const stub = {
+    datum: f.datum, baustelle_text: f.baustelle_text, mitarbeiter_spitzname: f.mitarbeiter_spitzname,
+    rolle: '', taetigkeiten: '', material: '', auffaelligkeiten: '', zeitschaetzung: '',
+    stichworte: '', transkript: '', notiz: 'Vom Büro nachgefragt am ' + heute,
+    fotos_anzahl: 0, aufnahme_minuten: 0, unsichere_begriffe: '', geprueft: true, abgeschlossen: false
+  };
+  try{
+    const antwort = await fetch(CONFIG.WEBHOOK_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: stub })
+    });
+    if (!antwort.ok) throw new Error('Server antwortet nicht');
+    f.erinnert = true;
+    fehlendZeichnen();
+  }catch(e){
+    alert('Erinnerung konnte nicht angelegt werden — bitte nochmal versuchen.');
+    console.warn(e);
+  }
+}
+
+function umschalten(id){
+  offenId = offenId === id ? null : id;
+  zeichnen();
+}
+
+async function speichern(idx){
+  const b = berichte[idx];
+  try{
+    const antwort = await fetch(CONFIG.WEBHOOK_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion: QUELLEN[quelle].speichern, bericht: b })
+    });
+    if (!antwort.ok) throw new Error('Server antwortet nicht');
+    document.getElementById('status').textContent = 'Gespeichert ✓';
+    offenId = null;
+    zeichnen();
+  }catch(e){
+    document.getElementById('status').textContent = 'Speichern fehlgeschlagen – bitte nochmal versuchen';
+    console.warn(e);
+  }
+}
+
+function feldKopieren(feldname, idx){
+  const text = (berichte[idx][feldname] || '').trim();
+  if (!text) return;
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+/* Einzelne Checkbox an- oder abwählen - nur die Auswahl-Leiste wird
+   aktualisiert, nicht die ganze Liste neu gezeichnet, damit aufgeklappte
+   Karten dabei nicht wieder zuklappen. */
+function checkboxUmschalten(id, checked){
+  if (checked) ausgewaehlt.add(id); else ausgewaehlt.delete(id);
+  massenLeisteAktualisieren();
+}
+
+/* Hält die "Alle sichtbaren auswählen"-Checkbox und den Freigeben-Knopf
+   synchron mit dem aktuellen Auswahl-Set - nach jedem zeichnen() und nach
+   jedem Checkbox-Klick aufgerufen. */
+function massenLeisteAktualisieren(){
+  const n = ausgewaehlt.size;
+  const info = document.getElementById('auswahlInfo');
+  const knopf = document.getElementById('knopfAusgewaehlteFreigeben');
+  if (n > 0){
+    info.textContent = n + ' ausgewählt';
+    info.hidden = false;
+    knopf.hidden = false;
+    knopf.textContent = 'Ausgewählte freigeben (' + n + ')';
+  } else {
+    info.hidden = true;
+    knopf.hidden = true;
+  }
+
+  const box = document.getElementById('alleAuswaehlenBox');
+  if (box){
+    const voll = sichtbarIds.length > 0 && sichtbarIds.every(id => ausgewaehlt.has(id));
+    const teil = !voll && sichtbarIds.some(id => ausgewaehlt.has(id));
+    box.checked = voll;
+    box.indeterminate = teil;
+    box.disabled = sichtbarIds.length === 0;
+  }
+}
+
+function berichtVonId(id){
+  return berichte.find((b, idx) => String(b.Id || idx) === id);
+}
+
+/* Gleiche Wirkung wie freigeben(idx), nur für mehrere Berichte auf einmal:
+   ein gemeinsamer, optionaler Grund statt eines Prompts pro Karte. */
+async function ausgewaehlteFreigeben(){
+  if (!ausgewaehlt.size) return;
+  const anzahl = ausgewaehlt.size;
+  const grund = prompt(anzahl + ' Bautagebücher zur Bearbeitung freigeben.\n\nGrund/Hinweis (optional, gilt für alle ausgewählten, erscheint direkt im Tool):', '');
+  if (grund === null) return;   // Abgebrochen
+
+  const ids = [...ausgewaehlt];
+  let erfolgreich = 0;
+  for (const id of ids){
+    const b = berichtVonId(id);
+    if (!b) continue;
+    b.abgeschlossen = false;
+    if (QUELLEN.bautagebuch.dreiStufig) b.status = 'eingereicht';
+    if (grund.trim()) b.notiz = grund.trim() + (b.notiz ? '\n\n' + b.notiz : '');
+    try{
+      const antwort = await fetch(CONFIG.WEBHOOK_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: b })
+      });
+      if (antwort.ok) erfolgreich++;
+    }catch(e){ console.warn('Freigeben fehlgeschlagen für', b.Id, e); }
+  }
+  ausgewaehlt.clear();
+  document.getElementById('status').textContent = erfolgreich + ' von ' + anzahl + ' Bautagebüchern freigegeben ✓';
+  zeichnen();
+}
+
+async function freigeben(idx){
+  const b = berichte[idx];
+  const grund = prompt(`„${b.baustelle_text}" (${b.datum}) zur Bearbeitung durch ${b.mitarbeiter_spitzname} freigeben.\n\nGrund/Hinweis für ${b.mitarbeiter_spitzname} (optional, erscheint direkt im Tool):`, '');
+  if (grund === null) return;   // Abgebrochen
+  b.abgeschlossen = false;
+  if (QUELLEN[quelle].dreiStufig) b.status = 'eingereicht';   // nach Korrektur wieder von vorn prüfen
+  if (grund.trim()) b.notiz = grund.trim() + (b.notiz ? '\n\n' + b.notiz : '');
+  await speichern(idx);
+}
+
+async function alsGeprueftMarkieren(idx){
+  const b = berichte[idx];
+  b.status = 'geprueft';
+  b.geprueft_am = heuteIso();
+  await speichern(idx);
+}
+
+async function jetztArchivieren(idx){
+  const b = berichte[idx];
+  b.status = 'archiviert';
+  await speichern(idx);
+}
+
+async function alleEingereichtenAlsGeprueftMarkieren(){
+  const faellig = alle.bautagebuch.filter(b => statusVon(b) === 'eingereicht');
+  if (!faellig.length){ alert('Aktuell nichts im Status "Eingereicht" — nichts zum Freigeben.'); return; }
+  if (!confirm(faellig.length + ' eingereichte Bautagebücher als geprüft markieren?')) return;
+
+  const heute = heuteIso();
+  for (const b of faellig){
+    b.status = 'geprueft';
+    b.geprueft_am = heute;
+    try{
+      await fetch(CONFIG.WEBHOOK_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: b })
+      });
+    }catch(e){ console.warn('Freigeben fehlgeschlagen für', b.Id, e); }
+  }
+  document.getElementById('status').textContent = faellig.length + ' Bautagebücher als geprüft markiert ✓';
+  zeichnen();
+}
+
+/* Läuft einmal nach dem Laden: alles, was schon länger als ARCHIV_NACH_TAGEN
+   geprüft ist, wandert automatisch weiter nach "archiviert" - ohne dass
+   jemand im Büro extra draufklicken muss. */
+/* Kein Automatismus mehr - nur noch auf bewussten Klick, damit nichts
+   archiviert wird, während z.B. Katharina im Urlaub ist und niemand
+   wirklich draufgeschaut hat. */
+async function alleGeprueftenArchivieren(){
+  const faellig = alle.bautagebuch.filter(b => statusVon(b) === 'geprueft');
+  if (!faellig.length){ alert('Aktuell nichts im Status "Geprüft" — nichts zu archivieren.'); return; }
+  if (!confirm(faellig.length + ' geprüfte Bautagebücher jetzt archivieren?')) return;
+
+  for (const b of faellig){
+    b.status = 'archiviert';
+    try{
+      await fetch(CONFIG.WEBHOOK_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: b })
+      });
+    }catch(e){ console.warn('Archivieren fehlgeschlagen für', b.Id, e); }
+  }
+  document.getElementById('status').textContent = faellig.length + ' Bautagebücher archiviert ✓';
+  zeichnen();
+}
+
+/* ===== Ablage-Berichte fürs Zoll-/GoBD-Archiv =====
+   Reine Client-seitige Druckansicht (window.print) - keine neue Datenquelle,
+   nur eine andere Sortierung/Darstellung der schon geladenen Bautagebücher.
+   Zeiten stehen bewusst NICHT drauf - die kommen aus WinWorker/Stempeluhr,
+   hier geht's nur um die Tätigkeitsdokumentation. */
+
+function montagDerWoche(datumIso){
+  const d = new Date(datumIso + 'T12:00:00');
+  const tag = (d.getDay() + 6) % 7;   // 0=Montag
+  d.setDate(d.getDate() - tag);
+  return isoDatum(d);
+}
+
+function druckKopfHtml(titel, unterzeile){
+  return `
+    <h1>${esc(titel)}</h1>
+    <div class="druckUnterzeile">Malerbetrieb Bäßgen · Reisertstraße 12a · 53773 Hennef &nbsp;·&nbsp; ${esc(unterzeile)}</div>`;
+}
+
+function druckFussHtml(){
+  return `<div class="druckFuss">Erstellt am ${new Date().toLocaleDateString('de-DE')} aus den erfassten Bautagebüchern ·
+    Reine Tätigkeitsdokumentation, keine Zeiterfassung — Arbeitszeiten siehe WinWorker.</div>`;
+}
+
+function drucken(inhaltHtml){
+  const box = document.getElementById('druckAnsicht');
+  box.innerHTML = inhaltHtml;
+  window.print();
+  setTimeout(() => { box.innerHTML = ''; }, 500);
+}
+
+document.getElementById('knopfWochenbericht').addEventListener('click', function(){
+  const heute = heuteIso();
+  const vorschlag = montagDerWoche(heute);
+  const eingabe = prompt('Für welche Woche? Bitte ein Datum aus der gewünschten Woche eingeben (JJJJ-MM-TT):', vorschlag);
+  if (!eingabe) return;
+  const montag = montagDerWoche(eingabe);
+  const sonntag = isoDatum(new Date(new Date(montag + 'T12:00:00').getTime() + 6*86400000));
+
+  const eintraege = alle.bautagebuch.filter(b => b.datum >= montag && b.datum <= sonntag);
+  if (!eintraege.length){
+    alert('Für diese Woche (' + montag + ' bis ' + sonntag + ') liegen keine Bautagebücher vor.');
+    return;
+  }
+
+  const nachMitarbeiter = new Map();
+  eintraege.forEach(b => {
+    const key = b.mitarbeiter_spitzname || '—';
+    if (!nachMitarbeiter.has(key)) nachMitarbeiter.set(key, []);
+    nachMitarbeiter.get(key).push(b);
+  });
+
+  let html = druckKopfHtml('Wochenbericht', 'KW ' + montag + ' bis ' + sonntag);
+  [...nachMitarbeiter.keys()].sort().forEach(name => {
+    const zeilen = nachMitarbeiter.get(name).sort((a,b) => a.datum.localeCompare(b.datum));
+    html += `<h2>${esc(name)}</h2><table><thead><tr><th>Datum</th><th>Baustelle</th><th>Tätigkeiten</th></tr></thead><tbody>`;
+    zeilen.forEach(b => {
+      html += `<tr><td>${esc(b.datum)}</td><td>${esc(b.baustelle_text)}</td><td>${esc(b.taetigkeiten)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  });
+  html += druckFussHtml();
+  drucken(html);
+});
+
+document.getElementById('knopfBaustellenbericht').addEventListener('click', function(){
+  const baustellen = [...new Set(alle.bautagebuch.map(b => b.baustelle_text))].filter(Boolean).sort();
+  if (!baustellen.length){ alert('Keine Baustellen mit Bautagebuch-Einträgen vorhanden.'); return; }
+  const eingabe = prompt('Für welche Baustelle? Bitte genauen Namen eingeben:\n\n' + baustellen.join('\n'));
+  if (!eingabe) return;
+  const treffer = baustellen.find(n => n.toLowerCase() === eingabe.trim().toLowerCase());
+  if (!treffer){ alert('Baustelle „' + eingabe + '" nicht gefunden — bitte genau wie in der Liste schreiben.'); return; }
+
+  const zeilen = alle.bautagebuch
+    .filter(b => b.baustelle_text === treffer)
+    .sort((a,b) => a.datum.localeCompare(b.datum));
+
+  let html = druckKopfHtml('Bautagebuch', treffer);
+  html += `<table><thead><tr><th>Datum</th><th>Mitarbeiter</th><th>Tätigkeiten</th></tr></thead><tbody>`;
+  zeilen.forEach(b => {
+    html += `<tr><td>${esc(b.datum)}</td><td>${esc(b.mitarbeiter_spitzname)}</td><td>${esc(b.taetigkeiten)}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  html += druckFussHtml();
+  drucken(html);
+});
+
+document.getElementById('knopfAlleGeprueft').addEventListener('click', alleEingereichtenAlsGeprueftMarkieren);
+document.getElementById('knopfAlleArchivieren').addEventListener('click', alleGeprueftenArchivieren);
+document.getElementById('knopfAusgewaehlteFreigeben').addEventListener('click', ausgewaehlteFreigeben);
+document.getElementById('alleAuswaehlenBox').addEventListener('change', function(){
+  if (this.checked){
+    sichtbarIds.forEach(id => ausgewaehlt.add(id));
+  } else {
+    sichtbarIds.forEach(id => ausgewaehlt.delete(id));
+  }
+  massenLeisteAktualisieren();
+  // Checkboxen an den einzelnen Karten nachziehen, ohne die ganze Liste
+  // neu zu zeichnen (sonst klappen offene Karten wieder zu).
+  document.querySelectorAll('.massenCheckbox').forEach(function(cb){
+    cb.checked = ausgewaehlt.has(cb.dataset.id);
+  });
+});
+
+laden();
+</script>
+</body>
+</html>
