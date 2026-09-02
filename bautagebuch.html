@@ -368,6 +368,37 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 </head>
 <body>
 
+<!-- Kompatibilitäts-Check, bewusst in reinem ES5 (kein const/let/Pfeilfunktion
+     in DIESEM Script-Tag), damit er auch auf uralten Handy-Browsern noch
+     läuft. Andere <script>-Tags werden unabhängig geparst - ein Syntaxfehler
+     dort reißt diesen Block hier nicht mit runter. Zeigt eine klare Ansage
+     statt einer stillschweigend kaputten Seite. -->
+<script>
+(function(){
+  try {
+    if (typeof fetch === 'undefined') { throw new Error('fetch fehlt'); }
+    if (typeof Promise === 'undefined') { throw new Error('Promise fehlt'); }
+    if (typeof URLSearchParams === 'undefined') { throw new Error('URLSearchParams fehlt'); }
+    // Pfeilfunktion/const/let/Template-String über den Function-Konstruktor
+    // testen - ein Syntaxfehler darin fliegt hier als normaler Laufzeitfehler,
+    // statt das ganze Script-Tag am Parsen zu hindern.
+    new Function('const t = () => 1; let u = 2; return `x` + t() + u;')();
+  } catch (fehler) {
+    document.write(
+      '<div style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;' +
+      'background:#F7F4EC;font-family:sans-serif;padding:28px;box-sizing:border-box;' +
+      'color:#1B1A1F;line-height:1.6;overflow:auto;">' +
+      '<h1 style="font-size:20px;margin:0 0 14px;color:#E2001A;">Dieser Browser ist leider zu alt</h1>' +
+      '<p>Diese Seite braucht einen neueren Browser, um zu funktionieren.</p>' +
+      '<p><b>1.</b> Falls vorhanden: Chrome oder Firefox öffnen statt dem vorinstallierten Browser.</p>' +
+      '<p><b>2.</b> Klappt das nicht: bei Fabian melden — dann trägt euch das erstmal jemand ' +
+      'aus dem Büro ein, bis das Handy-Problem gelöst ist.</p>' +
+      '</div>'
+    );
+  }
+})();
+</script>
+
 <!-- ========== 1. Aufnahme ========== -->
 <div class="aufnahme" id="ansichtAufnahme">
   <div class="marke">
@@ -408,6 +439,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <option value="">— lädt … —</option>
     </select>
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
+    <div class="schritte verborgen" id="mehrfachChips"></div>
   </div>
 
   <div class="beVerknuepft verborgen" id="beVerknuepft"></div>
@@ -571,6 +603,17 @@ function istAbwesenheit(text){
   });
 }
 
+/* Ein Tag kann mehrere Baustellen haben: "Baustelle A (Vorm.) + Baustelle B
+   (Nachm.)" - Segmente durch " + " getrennt, Zeitanteil optional in
+   Klammern. Muss identisch zu wer-wohin.html bleiben, sonst passt die
+   Zuordnung nicht. */
+function parseTagEintrag(text){
+  return (text||'').split('+').map(function(s){ return s.trim(); }).filter(Boolean).map(function(seg){
+    var m = seg.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    return m ? { baustelle: m[1].trim(), zeit: m[2].trim() } : { baustelle: seg, zeit: '' };
+  });
+}
+
 /* Wochenschlüssel wie in wer-wohin.html - muss identisch bleiben,
    sonst passen die Datensätze nicht zusammen. */
 function mondayOfDate(d){
@@ -593,17 +636,19 @@ function weekKeyOf(monday){
   return jahr + '-' + String(week).padStart(2,'0');
 }
 
-/* Was stand für diesen Tag im Plan? '' wenn nichts bekannt. */
+/* Was stand für diesen Tag im Plan? Liste, da an einem Tag mehrere
+   Baustellen stehen können (Konvention: "A (Vorm.) + B (Nachm.)" in der
+   Zelle, siehe parseTagEintrag). Leeres Array wenn nichts bekannt. */
 function einsatzFuerDatum(iso){
-  if (!iso) return '';
+  if (!iso) return [];
   var d = new Date(iso + 'T12:00:00');
   var wt = (d.getDay() + 6) % 7;
-  if (wt > 4) return '';   // Wochenende
+  if (wt > 4) return [];   // Wochenende
   var tage = ['mo','di','mi','do','fr'];
   var woche = wochenDaten[weekKeyOf(mondayOfDate(d))];
-  if (!woche || !woche.rows) return '';
+  if (!woche || !woche.rows) return [];
   var zeile = woche.rows.filter(function(r){ return r.name === aktuellerMitarbeiter(); })[0];
-  return zeile ? (zeile[tage[wt]] || '') : '';
+  return zeile ? parseTagEintrag(zeile[tage[wt]] || '') : [];
 }
 
 function heuteIso(){
@@ -841,13 +886,20 @@ $('baustelle').addEventListener('change', baueinweisungAnzeigen);
 
 function baustellenZeichnen(){
   var gewaehlt = $('baustelle').value;
-  var geplant = einsatzFuerDatum($('datum').value);
-  var abwesend = istAbwesenheit(geplant);
+  var geplantSegmente = einsatzFuerDatum($('datum').value);
+  var abwesend = geplantSegmente.length === 1 && istAbwesenheit(geplantSegmente[0].baustelle);
 
-  // Abwesenheiten gehören nicht in die Baustellenliste
-  var vorschlag = abwesend ? '' : geplant;
+  // Abwesenheiten gehören nicht in die Baustellenliste. Mehrere Baustellen
+  // an einem Tag sind normal (z.B. vormittags/nachmittags getrennt) -
+  // in dem Fall wird unten nichts automatisch reingefüllt, sondern zur
+  // Auswahl angeboten.
+  var geplanteBaustellen = abwesend ? [] : geplantSegmente.filter(function(s){ return !istAbwesenheit(s.baustelle); });
+  var vorschlag = geplanteBaustellen.length === 1 ? geplanteBaustellen[0].baustelle : '';
+
   var namen = alleBaustellen.filter(function(n){ return !istAbwesenheit(n); });
-  if (vorschlag && namen.indexOf(vorschlag) === -1) namen.unshift(vorschlag);
+  geplanteBaustellen.forEach(function(s){
+    if (namen.indexOf(s.baustelle) === -1) namen.unshift(s.baustelle);
+  });
 
   $('baustelle').innerHTML =
     '<option value="">— auswählen —</option>' +
@@ -855,13 +907,15 @@ function baustellenZeichnen(){
     '<option value="neu">Neues Objekt / noch nicht angelegt</option>';
 
   $('baustelleHinweis').classList.add('verborgen');
+  $('mehrfachChips').classList.add('verborgen');
+  $('mehrfachChips').innerHTML = '';
 
   if (abwesend){
     // Kein Bautagebuch nötig - Formular sperren statt jemanden
     // versehentlich einen Eintrag für seinen Urlaubstag schreiben zu lassen
     $('baustelle').value = '';
     $('baustelle').disabled = true;
-    $('abwesenheit').textContent = 'Laut Einsatzplan: ' + geplant + '. Für diesen Tag braucht es kein Bautagebuch.';
+    $('abwesenheit').textContent = 'Laut Einsatzplan: ' + geplantSegmente[0].baustelle + '. Für diesen Tag braucht es kein Bautagebuch.';
     $('abwesenheit').classList.remove('verborgen');
     $('knopfMikro').disabled = true;
     $('senden').disabled = true;
@@ -881,6 +935,29 @@ function baustellenZeichnen(){
 
   if (gewaehlt && namen.indexOf(gewaehlt) !== -1){
     $('baustelle').value = gewaehlt;
+  } else if (geplanteBaustellen.length > 1){
+    // Mehrere Baustellen heute geplant - keine Automatik, sondern als
+    // Chips zur Auswahl. Für jede ggf. einen eigenen Bautagebuch-Eintrag
+    // machen (mehrere pro Tag sind ja erlaubt).
+    $('baustelleHinweis').textContent = 'Laut Einsatzplan heute mehrere Baustellen — bitte auswählen:';
+    $('baustelleHinweis').classList.remove('verborgen');
+    geplanteBaustellen.forEach(function(s){
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'schrittChip';
+      chip.textContent = s.zeit ? (s.baustelle + ' · ' + s.zeit) : s.baustelle;
+      chip.addEventListener('click', function(){
+        $('baustelle').value = s.baustelle;
+        Array.prototype.forEach.call($('mehrfachChips').querySelectorAll('.schrittChip'), function(c){
+          c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
+        });
+        baueinweisungAnzeigen();
+        pruefeBereit();
+        pruefeTippenBereit();
+      });
+      $('mehrfachChips').appendChild(chip);
+    });
+    $('mehrfachChips').classList.remove('verborgen');
   } else if (vorschlag){
     $('baustelle').value = vorschlag;
     $('baustelleHinweis').textContent = 'Aus dem Einsatzplan übernommen — bei Bedarf ändern.';
