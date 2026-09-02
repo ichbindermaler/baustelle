@@ -434,10 +434,12 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   </div>
 
   <div class="eingabe">
-    <label for="baustelle">Baustelle</label>
-    <select id="baustelle">
-      <option value="">— lädt … —</option>
-    </select>
+    <div id="baustelleAuswahlFeld">
+      <label for="baustelle">Baustelle</label>
+      <select id="baustelle">
+        <option value="">— lädt … —</option>
+      </select>
+    </div>
     <div class="baustelleHinweis verborgen" id="baustelleHinweis"></div>
     <div class="schritte verborgen" id="mehrfachChips"></div>
   </div>
@@ -909,6 +911,7 @@ function baustellenZeichnen(){
   $('baustelleHinweis').classList.add('verborgen');
   $('mehrfachChips').classList.add('verborgen');
   $('mehrfachChips').innerHTML = '';
+  $('baustelleAuswahlFeld').classList.remove('verborgen');
 
   if (abwesend){
     // Kein Bautagebuch nötig - Formular sperren statt jemanden
@@ -941,6 +944,14 @@ function baustellenZeichnen(){
     // machen (mehrere pro Tag sind ja erlaubt).
     $('baustelleHinweis').textContent = 'Laut Einsatzplan heute mehrere Baustellen — bitte auswählen:';
     $('baustelleHinweis').classList.remove('verborgen');
+    // Geselle/Azubi bekommen hier nur die Buttons - die volle Liste aller
+    // Baustellen brauchen sie in diesem Fall nicht, das wäre nur unnötiges
+    // Rumsuchen. Andere Rollen (Vorarbeiter/Meister/Büro/Chef/Inhaber)
+    // behalten das Dropdown zusätzlich, falls sie doch mal für eine ganz
+    // andere Baustelle eintragen müssen.
+    if (ich.rolle === 'geselle' || ich.rolle === 'azubi'){
+      $('baustelleAuswahlFeld').classList.add('verborgen');
+    }
     geplanteBaustellen.forEach(function(s){
       var chip = document.createElement('button');
       chip.type = 'button';
