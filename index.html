@@ -781,14 +781,16 @@ window.addEventListener('beforeinstallprompt', (e) => {
     document.getElementById('installAndroid').hidden = false;
   }
 });
-document.getElementById('installKnopf')?.addEventListener('click', async () => {
+const installKnopfEl = document.getElementById('installKnopf');
+if (installKnopfEl) installKnopfEl.addEventListener('click', async () => {
   if (!installEvent) return;
   installEvent.prompt();
   await installEvent.userChoice;
   installEvent = null;
   document.getElementById('installAndroid').hidden = true;
 });
-document.getElementById('installAndroidZu')?.addEventListener('click', () => {
+const installAndroidZuEl = document.getElementById('installAndroidZu');
+if (installAndroidZuEl) installAndroidZuEl.addEventListener('click', () => {
   document.getElementById('installAndroid').hidden = true;
   localStorage.setItem('mb_install_android_zu', '1');
 });
@@ -804,7 +806,8 @@ const laeuftSchonAlsApp = window.navigator.standalone === true ||
 if (istIos && !laeuftSchonAlsApp && !localStorage.getItem('mb_install_ios_zu')){
   document.getElementById('installIos').hidden = false;
 }
-document.getElementById('installIosZu')?.addEventListener('click', () => {
+const installIosZuEl = document.getElementById('installIosZu');
+if (installIosZuEl) installIosZuEl.addEventListener('click', () => {
   document.getElementById('installIos').hidden = true;
   localStorage.setItem('mb_install_ios_zu', '1');
 });
