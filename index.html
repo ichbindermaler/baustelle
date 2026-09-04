@@ -203,6 +203,15 @@
   }
   .vorschau-knopf[aria-pressed="true"]{background:var(--rot);border-color:var(--rot);color:#fff}
   .vorschau-knopf:focus-visible{outline:2px solid var(--rot);outline-offset:2px}
+  .vorschau-dropdown{
+    font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;color:var(--tinte);
+    background:var(--papier-tief);border:1px solid var(--linie);border-radius:8px;
+    padding:9px 34px 9px 13px;cursor:pointer;appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%236B6B66' d='m5.5 8 4.5 4.5L14.5 8z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;background-size:15px;
+    max-width:260px;
+  }
+  .vorschau-dropdown:focus-visible{outline:2px solid var(--rot);outline-offset:2px}
 
   .demo{border-top:1px solid var(--linie);padding:20px 0 8px}
   .demo p{margin:0 0 10px;font-size:11px;color:#a8a4ad;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
@@ -662,13 +671,32 @@ function escapeHtml(s){
   return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 }
 
+// Für den Chef bleibt die Vorschau eine Reihe klickbarer Knöpfe (er wechselt
+// oft zum Testen). Beim Inhaber ist die schlanke Ansicht der Normalfall -
+// die Vorschau bleibt nutzbar, aber dezent als Dropdown statt Knopf-Reihe.
+const VORSCHAU_ALS_DROPDOWN = ['inhaber'];
+
 function vorschauKnoepfeZeichnen(){
   const box = $('#vorschauKnoepfe');
+
+  if (VORSCHAU_ALS_DROPDOWN.includes(aktuell.rolle)){
+    box.innerHTML = `<select class="vorschau-dropdown" id="vorschauSelect">
+      ${Object.entries(ROLLEN).map(([schluessel,r]) =>
+        `<option value="${schluessel}" ${schluessel===vorschauRolle?'selected':''}>${r.name}</option>`
+      ).join('')}
+    </select>`;
+    $('#vorschauSelect').addEventListener('change', (e) => {
+      vorschauRolle = e.target.value;
+      inhaltZeichnen();
+    });
+    return;
+  }
+
   box.innerHTML = Object.entries(ROLLEN).map(([schluessel,r]) =>
     `<button class="vorschau-knopf" type="button" data-rolle="${schluessel}"
       aria-pressed="${schluessel===vorschauRolle}">${r.name}</button>`).join('');
   box.querySelectorAll('button').forEach(b =>
-    b.addEventListener('click', () => { vorschauRolle = b.dataset.rolle; inhaltZeichnen(); }));
+    b.addEventListener('click', () => { vorschauRolle = b.dataset.rolle; vorschauKnoepfeZeichnen(); inhaltZeichnen(); }));
 }
 
 function inhaltZeichnen(){
