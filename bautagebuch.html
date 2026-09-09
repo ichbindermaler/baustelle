@@ -300,6 +300,25 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
 .fliess p{margin:0 0 11px;}
 .fliess p:last-child{margin-bottom:0;}
 
+.zeitSlider{display:flex;align-items:center;gap:18px;margin:10px 0 4px;}
+.zeitSlider input[type=range]{
+  flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;
+  background:var(--linie);outline:none;
+}
+.zeitSlider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:28px;height:28px;border-radius:50%;
+  background:var(--rot);cursor:pointer;border:3px solid var(--blatt);
+  box-shadow:0 1px 5px rgba(0,0,0,.35);
+}
+.zeitSlider input[type=range]::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;background:var(--rot);cursor:pointer;
+  border:3px solid var(--blatt);box-shadow:0 1px 5px rgba(0,0,0,.35);
+}
+.zeitAnzeige{
+  font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--tinte);
+  min-width:82px;text-align:right;flex:none;
+}
+
 .befund{width:100%;border-collapse:collapse;}
 .materialLeer{font-size:13px;color:var(--grau);font-style:italic;margin:0 0 8px;}
 .materialLoeschCell{width:28px;text-align:right;}
@@ -448,6 +467,17 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 
   <div class="beVerknuepft verborgen" id="beVerknuepft"></div>
 
+  <div class="eingabe">
+    <label for="vZeitSlider">Arbeitszeit</label>
+    <div class="zeitSlider">
+      <input type="range" id="vZeitSlider" min="0.5" max="12" step="0.5" value="8">
+      <div class="zeitAnzeige"><span id="vZeitWert">8</span> Std.</div>
+    </div>
+    <p style="margin-top:6px;font-size:12.5px;color:var(--grau);">
+      Fürs Geld zählt, was im Büro läuft — das hier ist nur zur Aufteilung auf die Baustellen.
+    </p>
+  </div>
+
   <div class="mikro" id="blockSprechen">
     <button class="knopfMikro" id="knopfMikro" aria-label="Aufnahme starten">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M18 11a1 1 0 0 0-2 0 4 4 0 0 1-8 0 1 1 0 0 0-2 0 6 6 0 0 0 5 5.9V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-3.1a6 6 0 0 0 5-5.9z"/></svg>
@@ -559,11 +589,14 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <div class="fliess" contenteditable="true" id="pAuffaellig"></div>
     </section>
 
-    <section class="block verborgen" id="blockZeit">
-      <h2><span class="zaehler">04</span> Zeitschätzung</h2>
-      <div class="fliess" contenteditable="true" id="pZeit"></div>
-      <p style="margin-top:8px;font-size:12px;color:var(--grau);font-style:italic;">
-        Nur zur groben Orientierung — keine Lohn- oder Abrechnungsgrundlage. Stunden laufen über WinWorker.
+    <section class="block" id="blockZeit">
+      <h2><span class="zaehler">04</span> Arbeitszeit</h2>
+      <div class="zeitSlider">
+        <input type="range" id="pZeitSlider" min="0.5" max="12" step="0.5" value="8">
+        <div class="zeitAnzeige"><span id="pZeitWert">8</span> Std.</div>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--grau);">
+        Fürs Geld zählt, was im Büro läuft — das hier ist nur zur Aufteilung auf die Baustellen.
       </p>
     </section>
 
@@ -672,6 +705,12 @@ function starteSeite(){
   $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
   $('datum').addEventListener('change', datumGewechselt);
 
+  $('vZeitSlider').addEventListener('input', function(){
+    vZeitBeruehrt = true;
+    $('vZeitWert').textContent = String(this.value).replace('.', ',');
+  });
+  vZeitStandardSetzen();
+
   var token = tokenHolen();
   if (!token){
     $('werName').textContent = 'Kein Zugang – bitte den persönlichen Link aus dem Büro benutzen';
@@ -689,6 +728,7 @@ function starteSeite(){
     ich.vorname = p.vorname;
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
+    vZeitStandardSetzen();   // jetzt mit der echten Rolle statt dem Leer-Standard
     baustellenLaden();
     einsatzLaden();
     baueinweisungenLaden();
@@ -997,6 +1037,7 @@ function datumGewechselt(){
   }
   $('baustelle').value = '';   // Auswahl vom vorherigen Tag nicht mitschleppen
   baustellenZeichnen();
+  vZeitStandardSetzen();
 }
 
 /* Ein Symbol pro Kategorie, schlichte Strichzeichnung wie im Rest des Systems. */
@@ -1077,6 +1118,7 @@ function kategorienZeichnen(){
     feld.addEventListener('input', function(){
       if (!kategorieAuswahl.hasOwnProperty(kat.name)) kategorieAuswahl[kat.name] = { schritte:[], text:'' };
       kategorieAuswahl[kat.name].text = feld.value;
+      pruefeTippenBereit();
     });
     zeile.querySelectorAll('.schrittChip').forEach(function(chip){
       chip.addEventListener('click', function(){
@@ -1350,6 +1392,46 @@ function klingtNachKauderwelsch(text){
   return (treffer.length / fetzen.length) > 0.5;
 }
 
+/* Falls die KI aus der Sprachaufnahme schon eine Zeitangabe als Text erkannt
+   hat (z.B. "ca. 4 Stunden"), daraus einen Regler-Startwert ableiten, damit
+   der Mitarbeiter im Idealfall gar nichts mehr anfassen muss - nur bestätigen.
+   Ohne verwertbare Zahl (oder bei Unsinn) bleibt der Regler beim Standardwert. */
+function parseStundenAusText(text){
+  if (!text) return null;
+  var treffer = String(text).replace(',', '.').match(/(\d+(\.\d+)?)/);
+  if (!treffer) return null;
+  var zahl = parseFloat(treffer[1]);
+  if (isNaN(zahl) || zahl <= 0 || zahl > 16) return null;
+  return Math.round(zahl * 2) / 2;   // auf 0,5-Schritte runden, passend zum Regler
+}
+
+/* Standard-Stundenwert, wenn weder die KI noch ein vorheriger Eintrag schon
+   eine Zahl liefert - üblicher Bau-Rhythmus: Mo-Do 8,5h, Fr 6h. Gilt nur für
+   die Rollen, die wirklich auf der Baustelle stehen; bei allen anderen
+   (Meister, Büro, Chef, Inhaber) bleibt es beim neutralen Standard 8h, da
+   der Rhythmus für die nicht in der Form gilt. */
+var STUNDEN_STANDARD_ROLLEN = ['geselle','azubi','vorarbeiter'];
+function standardStunden(datumIso, rolle){
+  if (STUNDEN_STANDARD_ROLLEN.indexOf(rolle) === -1) return 8;
+  var d = new Date((datumIso || heuteIso()) + 'T12:00:00');
+  var wochentag = (d.getDay() + 6) % 7;   // 0=Mo ... 6=So
+  if (wochentag === 4) return 6;          // Freitag
+  if (wochentag > 4) return 8;            // Wochenende - unüblich, neutraler Fallback
+  return 8.5;                             // Mo-Do
+}
+
+/* Merkt sich, ob der Mitarbeiter den vorderen Regler schon selbst bewegt
+   hat - dann gilt sein Wert als bewusste Entscheidung und wird später auch
+   von einer KI-erkannten Zeitangabe aus der Sprachaufnahme nicht mehr
+   überschrieben. Unberührt gilt weiter der wochentagsbasierte Standard. */
+var vZeitBeruehrt = false;
+function vZeitStandardSetzen(){
+  if (vZeitBeruehrt) return;
+  var wert = standardStunden($('datum').value, ich.rolle);
+  $('vZeitSlider').value = wert;
+  $('vZeitWert').textContent = String(wert).replace('.', ',');
+}
+
 /* ===== Protokoll aufbauen ===== */
 function aufbauen(d){
   letztesProtokoll = d;
@@ -1388,9 +1470,17 @@ function aufbauen(d){
   $('pAuffaellig').innerHTML = auff ? '<p>' + escape(auff) + '</p>' : '';
   $('blockAuffaellig').classList.toggle('verborgen', !auff);
 
-  var zeit = p.zeitschaetzung || '';
-  $('pZeit').innerHTML = zeit ? '<p>' + escape(zeit) + '</p>' : '';
-  $('blockZeit').classList.toggle('verborgen', !zeit);
+  // Vorrang: eine bewusste Einstellung vorne bei der Eingabe schlägt eine
+  // KI-erkannte Zeitangabe aus der Sprachaufnahme. Nur wenn der Mitarbeiter
+  // den vorderen Regler gar nicht angefasst hat, darf die KI-Erkennung (falls
+  // vorhanden) den wochentagsbasierten Standard überschreiben.
+  var kiZeit = parseStundenAusText(p.zeitschaetzung);
+  var zeit = (!vZeitBeruehrt && kiZeit) ? kiZeit : Number($('vZeitSlider').value);
+  $('pZeitSlider').value = zeit;
+  $('pZeitWert').textContent = String(zeit).replace('.', ',');
+  $('pZeitSlider').oninput = function(){
+    $('pZeitWert').textContent = String(this.value).replace('.', ',');
+  };
 
   $('pFotos').innerHTML = fotos.map(function(src,i){
     return '<div class="foto"><figure><img src="' + src + '" alt="">' +
@@ -1509,7 +1599,8 @@ $('ablegen').addEventListener('click', function(){
     stichworte: $('pStichworte').innerText.trim(),
     material: materialZeilen,
     auffaelligkeiten: $('pAuffaellig').innerText.trim(),
-    zeitschaetzung: $('pZeit').innerText.trim(),
+    zeitschaetzung: $('pZeitWert').textContent.trim() + ' Std.',
+    arbeitszeit_stunden: Number($('pZeitSlider').value) || 0,
     transkript: letztesProtokoll.transkript || '',
     notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
     fotos_anzahl: fotos.length,
@@ -1570,6 +1661,7 @@ $('nochmal').addEventListener('click', function(){
   $('mikroText').textContent = 'Antippen zum Starten';
   $('notiz').value = '';
   $('datum').value = heuteIso();
+  vZeitBeruehrt = false;   // neuer Eintrag, neuer wochentagsbasierter Standard
   datumGewechselt();
   document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
   $('senden').disabled = true;
