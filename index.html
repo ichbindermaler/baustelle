@@ -6,8 +6,19 @@
 <meta name="theme-color" content="#faf9f7">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- Icon fürs Startbildschirm-Symbol auf Android und iOS -->
-<link rel="manifest" href="manifest.json">
+<!-- Kein <link rel="manifest"> mehr hier - bewusst. Mit Manifest merkt sich
+     iOS/Android beim "Zum Home-Bildschirm hinzufügen" nicht die tatsächlich
+     offene Adresse (mit dem persönlichen Zugangs-Token), sondern springt
+     immer auf die feste start_url aus der Manifest-Datei - ohne Token, für
+     jeden gleich. Ergebnis: "Wer bist du?" bei jedem Öffnen vom Home-
+     Bildschirm aus, dauerhaft, nicht reparierbar, weil eine einzelne
+     Manifest-Datei keinen Platz für individuelle Mitarbeiter-Token hat.
+     Ohne Manifest merkt sich iOS stattdessen ganz einfach die exakte
+     Adresse, die beim Hinzufügen gerade offen war (inklusive Token) - genau
+     das, was hier gebraucht wird. apple-touch-icon/apple-mobile-web-app-*
+     darunter sorgen trotzdem noch für ein eigenes Icon und die Ansicht ohne
+     Safari-Leiste auf iOS. Auf Android könnte das Icon beim Hinzufügen
+     dadurch etwas schlichter/generischer ausfallen als mit Manifest. -->
 <link rel="icon" href="favicon-48.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
