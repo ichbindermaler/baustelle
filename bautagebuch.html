@@ -433,6 +433,8 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <span id="werName">…</span>
   </div>
 
+  <div class="buero-grund verborgen" id="bueroHinweisAufnahme"></div>
+
   <div class="eingabe verborgen" id="blockMitarbeiterZiel">
     <label for="mitarbeiterZiel">Für welchen Mitarbeiter — Nachtrag ausm Büro</label>
     <select id="mitarbeiterZiel">
@@ -504,7 +506,6 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
       <button class="fotoKnopf" id="fotoKnopf" aria-label="Foto hinzufügen">+</button>
     </div>
     <input type="file" id="fotoEingabe" accept="image/*" multiple style="display:none">
-    <p class="fotoBaldHinweis">📷 Dauerhafte Ablage der Fotos kommt bald — aktuell nur für dieses Protokoll sichtbar.</p>
   </div>
 
   <div class="eingabe">
@@ -773,6 +774,21 @@ function berichtWiederAufnehmen(){
       baustellenZeichnen();
       $('baustelle').value = treffer.baustelle_text || '';
       baueinweisungAnzeigen();
+
+      if (treffer.notiz){
+        $('bueroHinweisAufnahme').innerHTML = '<strong>Hinweis vom Büro:</strong> ' + escape(treffer.notiz);
+        $('bueroHinweisAufnahme').classList.remove('verborgen');
+      }
+
+      // Leere Erinnerungs-Stubs (vom Büro angelegt, wenn ein Eintrag für
+      // einen Tag komplett fehlte) haben noch nichts geschrieben - die
+      // sollen ganz normal in die Aufnahme (Sprechen/Tippen) mit schon
+      // vorbefüllter Baustelle/Datum, nicht direkt ins fertige Protokoll,
+      // wo es nichts zu überprüfen gibt und man zum Schreiben gezwungen
+      // wirkt. Nur ein ECHTER, schon geschriebener Bericht (vom Büro zur
+      // Korrektur freigegeben) springt weiter ins Protokoll.
+      var istLeererHinweis = !treffer.taetigkeiten && !treffer.transkript;
+      if (istLeererHinweis) return;   // ansichtAufnahme ist schon die Standardansicht
 
       aufbauen({
         baustelle: treffer.baustelle_text, mitarbeiter: treffer.mitarbeiter_spitzname,
@@ -1604,6 +1620,7 @@ $('ablegen').addEventListener('click', function(){
     transkript: letztesProtokoll.transkript || '',
     notiz: [$('notiz').value, bildunterschriften].filter(Boolean).join('\n\n'),
     fotos_anzahl: fotos.length,
+    fotos: fotos,   // Array aus JPEG-Daten (base64), schon client-seitig verkleinert - n8n lädt sie zu R2 hoch
     aufnahme_minuten: Math.round((letztesProtokoll.dauer || 0) / 60 * 10) / 10,
     unsichere_begriffe: unsicherListe.join(', '),
     geprueft: unsicherListe.length === 0,        // true nur, wenn die KI nichts zu klaeren hatte
