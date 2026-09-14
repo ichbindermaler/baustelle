@@ -702,6 +702,7 @@ function tokenHolen(){
 
 function starteSeite(){
   kategorienZeichnen();
+  warteschlangeAnzeigen();
   $('datum').value = heuteIso();
   $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
   $('datum').addEventListener('change', datumGewechselt);
@@ -1576,6 +1577,62 @@ $('stichworteKopieren').addEventListener('click', function(){
 });
 
 /* ===== Eintrag in NocoDB ablegen ===== */
+/* ===== Sicherheitsnetz für nicht angekommene Einträge =====
+   Auf der Baustelle ist die Verbindung oft schlecht - schlägt das Absenden
+   fehl (oder wird die Seite/App währenddessen geschlossen), darf der
+   fertige Eintrag nicht einfach nur im Arbeitsspeicher der Seite leben und
+   damit verloren gehen. Deshalb: vor jedem Sendeversuch lokal
+   zwischenspeichern, erst nach bestätigtem Erfolg wieder entfernen. Beim
+   nächsten Öffnen der Seite zeigt sich, falls noch was übrig ist. */
+var WARTESCHLANGE_KEY = 'mb_bautagebuch_warteschlange';
+
+function warteschlangeLesen(){
+  try{ return JSON.parse(localStorage.getItem(WARTESCHLANGE_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function warteschlangeSchreiben(liste){
+  try{ localStorage.setItem(WARTESCHLANGE_KEY, JSON.stringify(liste)); }catch(e){}
+}
+function warteschlangeBannerEntfernen(){
+  document.querySelectorAll('.warteschlange-banner').forEach(function(el){ el.remove(); });
+}
+function warteschlangeAnzeigen(){
+  warteschlangeBannerEntfernen();
+  var liste = warteschlangeLesen();
+  if (!liste.length) return;
+  var banner = document.createElement('div');
+  banner.className = 'buero-grund warteschlange-banner';
+  banner.innerHTML = '<strong>' + liste.length + ' Eintrag' + (liste.length === 1 ? '' : 'e') +
+    ' noch nicht angekommen.</strong> Beim letzten Mal hat die Verbindung nicht gereicht. ' +
+    '<button type="button" class="knopfKlein" id="warteschlangeSenden" style="margin-top:8px;">Jetzt erneut senden</button>';
+  $('wer').insertAdjacentElement('afterend', banner);
+  $('warteschlangeSenden').addEventListener('click', warteschlangeAbsenden);
+}
+async function warteschlangeAbsenden(){
+  var liste = warteschlangeLesen();
+  var knopf = $('warteschlangeSenden');
+  if (knopf){ knopf.disabled = true; knopf.textContent = 'Wird gesendet …'; }
+  var rest = [];
+  for (var i = 0; i < liste.length; i++){
+    try{
+      var antwort = await fetch(BUERO, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: liste[i].bericht })
+      });
+      if (!antwort.ok) throw new Error('Status ' + antwort.status);
+    }catch(e){
+      rest.push(liste[i]);   // wieder fehlgeschlagen, bleibt in der Warteschlange
+    }
+  }
+  warteschlangeSchreiben(rest);
+  if (rest.length === 0){
+    warteschlangeBannerEntfernen();
+  } else if (knopf){
+    knopf.disabled = false;
+    knopf.textContent = 'Nochmal versuchen (' + rest.length + ' übrig)';
+  }
+}
+
 var letztesProtokoll = null;
 var legtGerade = false;
 
@@ -1631,8 +1688,25 @@ $('ablegen').addEventListener('click', function(){
   // Bericht überschrieben (Id mitgeschickt) statt ein neuer angelegt.
   if (wiederaufnahmeId) bericht.Id = wiederaufnahmeId;
 
+  // Vor dem Sendeversuch in die Warteschlange - so geht der Eintrag nicht
+  // verloren, falls die Verbindung mittendrin abbricht oder die Seite
+  // geschlossen wird, bevor eine Antwort zurückkommt.
+  var localId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  var warteschlange = warteschlangeLesen();
+  warteschlange.push({ localId: localId, bericht: bericht });
+  warteschlangeSchreiben(warteschlange);
+
+  // Ohne Zeitlimit kann ein fetch() bei schlechter Baustellen-Verbindung
+  // einfach ewig hängen bleiben - dann zeigt der Knopf für immer "Wird
+  // weitergeleitet …", ohne je Erfolg oder Fehler zu melden. 25 Sekunden
+  // sind großzügig genug für ein normales Mobilfunknetz, aber kurz genug,
+  // um nicht ewig im Unklaren zu lassen.
+  var zeitlimit = new AbortController();
+  var zeitlimitTimer = setTimeout(function(){ zeitlimit.abort(); }, 25000);
+
   fetch(BUERO, {
     method:'POST', headers:{'Content-Type':'application/json'},
+    signal: zeitlimit.signal,
     body: JSON.stringify({
       aktion: 'bautagebuch_speichern',
       bericht: bericht
@@ -1640,13 +1714,21 @@ $('ablegen').addEventListener('click', function(){
   })
   .then(function(r){ if(!r.ok) throw new Error('Status ' + r.status); return r.json(); })
   .then(function(){
+    clearTimeout(zeitlimitTimer);
+    // Erfolgreich angekommen - aus der Warteschlange wieder raus.
+    warteschlangeSchreiben(warteschlangeLesen().filter(function(e){ return e.localId !== localId; }));
     knopf.textContent = 'Ans Büro geschickt ✓';
     knopf.classList.remove('primaer');
   })
   .catch(function(e){
+    clearTimeout(zeitlimitTimer);
     knopf.disabled = false;
     knopf.textContent = 'Nochmal versuchen';
-    alert('Konnte nicht ans Büro geschickt werden: ' + e.message + '\nDas Protokoll bleibt hier stehen, einfach nochmal antippen.');
+    var grund = e.name === 'AbortError' ? 'Die Verbindung war zu langsam (kein Erfolg nach 25 Sekunden).' : e.message;
+    alert('Konnte nicht ans Büro geschickt werden: ' + grund + '\nKeine Sorge, der Eintrag ist lokal gesichert und bleibt hier stehen - einfach nochmal antippen, sobald die Verbindung besser ist.');
+    // Bleibt bewusst in der Warteschlange stehen (schon oben reingeschrieben) -
+    // falls die Seite jetzt geschlossen wird, zeigt sich das Sicherheitsnetz
+    // beim nächsten Öffnen von selbst.
   })
   .then(function(){ legtGerade = false; });
 });
