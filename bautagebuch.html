@@ -195,8 +195,11 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
 .senden:focus-visible{outline:3px solid var(--tinte);outline-offset:2px;}
 
 .fehler{
-  margin-top:16px;padding:12px 14px;border-left:3px solid var(--rot);
-  background:#FBEAEC;font-size:14px;
+  margin-top:16px;padding:14px 16px;border-left:4px solid var(--rot);
+  background:#FBEAEC;font-size:15px;font-weight:600;border-radius:6px;
+}
+.fehler .fehler-technisch{
+  display:block;margin-top:6px;font-size:12px;font-weight:400;color:var(--grau);
 }
 
 /* Wartezustand */
@@ -489,6 +492,8 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <audio class="nachhoeren verborgen" id="nachhoeren" controls></audio>
   </div>
 
+  <div class="fehler verborgen" id="fehler"></div>
+
   <div class="kurzWarnung verborgen" id="kurzWarnung">
     ⚠️ Die Aufnahme war sehr kurz — das erkennt die Spracherkennung oft nicht richtig.
     Am besten <button type="button" id="kurzNochmal">nochmal aufnehmen</button>.
@@ -514,7 +519,6 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   </div>
 
   <button class="senden" id="senden" disabled>Eintrag erstellen</button>
-  <div class="fehler verborgen" id="fehler"></div>
 </div>
 
 <!-- ========== 2. Warten ========== -->
@@ -1230,6 +1234,16 @@ $('knopfMikro').addEventListener('click', function(){
 function starten(){
   $('nachhoeren').classList.add('verborgen');
   $('kurzWarnung').classList.add('verborgen');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    fehlerZeigen('Sprachaufnahme wird von diesem Browser nicht unterstützt. Bitte „Tippen" statt „Sprechen" nutzen, oder den Browser aktualisieren.', 'getUserMedia fehlt');
+    return;
+  }
+  if (!window.MediaRecorder){
+    fehlerZeigen('Sprachaufnahme wird von diesem Browser nicht unterstützt (zu alte Version). Bitte „Tippen" statt „Sprechen" nutzen, oder iOS/den Browser aktualisieren.', 'MediaRecorder fehlt');
+    return;
+  }
+
   navigator.mediaDevices.getUserMedia({ audio:true }).then(function(stream){
     // Format je nach Geraet: Android liefert webm, iOS mp4
     var typen = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/aac'];
@@ -1258,8 +1272,21 @@ function starten(){
       $('uhr').textContent = uhrText(sekunden);
       if(sekunden >= 600) stoppen();
     },1000);
-  }).catch(function(){
-    fehlerZeigen('Kein Zugriff aufs Mikrofon. In den Browsereinstellungen freigeben und Seite neu laden.');
+  }).catch(function(e){
+    var name = (e && e.name) ? e.name : 'unbekannt';
+    var text;
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError'){
+      text = 'Mikrofon-Zugriff wurde verweigert. In den iPhone-Einstellungen (Safari bzw. die Website-Einstellungen dieser Seite) die Mikrofon-Freigabe aktivieren, dann die Seite neu laden.';
+    } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError'){
+      text = 'Kein Mikrofon gefunden. Seite einmal neu laden, falls das Gerät eigentlich eins hat.';
+    } else if (name === 'NotReadableError' || name === 'TrackStartError'){
+      text = 'Das Mikrofon wird gerade von einer anderen App benutzt. Diese App schließen und nochmal versuchen.';
+    } else if (name === 'SecurityError'){
+      text = 'Der Browser blockiert den Mikrofon-Zugriff hier aus Sicherheitsgründen. Falls die Seite über „Zum Home-Bildschirm" geöffnet wurde: einmal direkt in Safari probieren statt über das App-Symbol.';
+    } else {
+      text = 'Kein Zugriff aufs Mikrofon. In den Browsereinstellungen freigeben und Seite neu laden.';
+    }
+    fehlerZeigen(text, name + ((e && e.message) ? ': ' + e.message : ''));
   });
 }
 
@@ -1330,10 +1357,17 @@ function pruefeBereit(){
 $('baustelle').addEventListener('change', pruefeBereit);
 $('baustelle').addEventListener('change', pruefeTippenBereit);
 
-function fehlerZeigen(text){
-  $('fehler').textContent = text;
+function fehlerZeigen(text, technisch){
+  $('fehler').innerHTML = escape(text) +
+    (technisch ? '<span class="fehler-technisch">Technischer Grund: ' + escape(technisch) + '</span>' : '');
   $('fehler').classList.remove('verborgen');
   zeige('ansichtAufnahme');
+  // zeige() scrollt zum Seitenanfang - bei viel Inhalt oberhalb (Datum,
+  // Baustelle, Arbeitszeit-Regler, Mikro-Kreis) reicht das auf kleinen
+  // Bildschirmen nicht, um die Meldung tatsächlich ins Bild zu holen.
+  setTimeout(function(){
+    $('fehler').scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 50);
 }
 
 $('senden').addEventListener('click', function(){
