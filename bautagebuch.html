@@ -1007,12 +1007,12 @@ function baustellenZeichnen(){
     // machen (mehrere pro Tag sind ja erlaubt).
     $('baustelleHinweis').textContent = 'Laut Einsatzplan heute mehrere Baustellen — bitte auswählen:';
     $('baustelleHinweis').classList.remove('verborgen');
-    // Geselle/Azubi bekommen hier nur die Buttons - die volle Liste aller
+    // Geselle/Azubi/Helfer bekommen hier nur die Buttons - die volle Liste aller
     // Baustellen brauchen sie in diesem Fall nicht, das wäre nur unnötiges
     // Rumsuchen. Andere Rollen (Vorarbeiter/Meister/Büro/Chef/Inhaber)
     // behalten das Dropdown zusätzlich, falls sie doch mal für eine ganz
     // andere Baustelle eintragen müssen.
-    if (ich.rolle === 'geselle' || ich.rolle === 'azubi'){
+    if (ich.rolle === 'geselle' || ich.rolle === 'azubi' || ich.rolle === 'helfer'){
       $('baustelleAuswahlFeld').classList.add('verborgen');
     }
     geplanteBaustellen.forEach(function(s){
@@ -1461,7 +1461,7 @@ function parseStundenAusText(text){
    die Rollen, die wirklich auf der Baustelle stehen; bei allen anderen
    (Meister, Büro, Chef, Inhaber) bleibt es beim neutralen Standard 8h, da
    der Rhythmus für die nicht in der Form gilt. */
-var STUNDEN_STANDARD_ROLLEN = ['geselle','azubi','vorarbeiter'];
+var STUNDEN_STANDARD_ROLLEN = ['geselle','azubi','vorarbeiter','helfer'];
 function standardStunden(datumIso, rolle){
   if (STUNDEN_STANDARD_ROLLEN.indexOf(rolle) === -1) return 8;
   var d = new Date((datumIso || heuteIso()) + 'T12:00:00');

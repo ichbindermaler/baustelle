@@ -325,23 +325,23 @@ const CONFIG = {
 
 // Wer eine Baustelle zugewiesen bekommt und die Einsatzkarte sehen soll.
 // Meister betreuen meist mehrere Baustellen gleichzeitig - für die passt
-// "eine Baustelle, ein Ort" nicht. Azubis dagegen wie Gesellen fest zugeteilt.
-const EINSATZ_ROLLEN = ['geselle','vorarbeiter','azubi'];
+// "eine Baustelle, ein Ort" nicht. Azubis/Helfer dagegen wie Gesellen fest zugeteilt.
+const EINSATZ_ROLLEN = ['geselle','vorarbeiter','azubi','helfer'];
 
 const ROLLEN = {
   azubi:{name:'Azubi'}, geselle:{name:'Geselle'}, vorarbeiter:{name:'Vorarbeiter'},
   meister:{name:'Meister'}, inhaber:{name:'Inhaber'}, buero:{name:'Büro'},
-  chef:{name:'Chef'}
+  chef:{name:'Chef'}, helfer:{name:'Helfer'}
 };
 
 /* Die eine Sache, die diese Rolle am häufigsten anklickt.
-   Geselle/Azubi: kein "Einchecken" mehr nötig - die Einsatzkarte oben zeigt
+   Geselle/Azubi/Helfer: kein "Einchecken" mehr nötig - die Einsatzkarte oben zeigt
    das automatisch (heute/morgen, Ort, Kollegen), dafür braucht's keine
    eigene Kachel mehr, siehe EINSATZ_ROLLEN. */
 const HAUPTAKTION = {
   azubi:'bautagebuch.html', geselle:'bautagebuch.html', vorarbeiter:'',
   meister:'wer-wohin.html', inhaber:'controlling.html',
-  buero:'', chef:'controlling.html'
+  buero:'', chef:'controlling.html', helfer:'bautagebuch.html'
 };
 
 const GRUPPEN = [
@@ -352,15 +352,16 @@ const GRUPPEN = [
 ];
 
 /* =========================================================================
-   KACHEL-KATALOG - Stand August 2026.
+   KACHEL-KATALOG - Stand September 2026.
    Azubi/Geselle/Meister/Büro jetzt bewusst festgelegt (siehe Chatverlauf).
+   Helfer bekommt überall das, was Azubi auch hat (siehe Chatverlauf).
    Vorarbeiter bleibt absichtlich leer, bis das nachgeholt wird.
    ========================================================================= */
 const KACHELN = [
   // --- Baustelle ---
   {gruppe:'baustelle',datei:'bautagebuch.html',icon:'kamera',name:'Bautagebuch',
    text:'Sprachmemo, Fotos, Protokoll — alles in einem',
-   rollen:['azubi','geselle','buero','chef']},
+   rollen:['azubi','geselle','buero','chef','helfer']},
   {gruppe:'baustelle',datei:'terminprotokoll.html',icon:'liste',name:'Terminprotokoll',
    text:'Protokoll für Ortstermine mit Kunde/Hausverwaltung',
    rollen:['meister','buero','chef']},
@@ -371,7 +372,7 @@ const KACHELN = [
   // --- Geräte & Material ---
   {gruppe:'geraete',datei:'geraetecheck.html',icon:'werkzeug',name:'Gerät melden',
    text:'QR scannen, Zustand melden',marke:'arbeit',
-   rollen:['azubi','geselle','chef']},
+   rollen:['azubi','geselle','chef','helfer']},
   {gruppe:'geraete',datei:'geraeteuebersicht.html',icon:'regal',name:'Geräteliste',
    text:'Wer hat was, was steht im Lager',marke:'arbeit',
    rollen:['geselle','chef']},
@@ -438,7 +439,7 @@ const KACHELN = [
    rollen:['chef']},
   {gruppe:'team',datei:'mitarbeiter-feedback.html',icon:'sprechblase',name:'Feedback',
    text:'Anonym – kommt ohne Namen an',
-   rollen:['azubi','geselle','chef']},
+   rollen:['azubi','geselle','chef','helfer']},
   {gruppe:'team',datei:'weiterbildung.html',icon:'brille',name:'Weiterbildung',
    text:'Joblinge, AsaFlex und mehr',marke:'geplant',
    rollen:['chef']},
