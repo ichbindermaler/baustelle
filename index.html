@@ -341,7 +341,7 @@ const ROLLEN = {
 const HAUPTAKTION = {
   azubi:'bautagebuch.html', geselle:'bautagebuch.html', vorarbeiter:'',
   meister:'wer-wohin.html', inhaber:'controlling.html',
-  buero:'', chef:'controlling.html', helfer:'bautagebuch.html'
+  buero:'', chef:'chef.html', helfer:'bautagebuch.html'
 };
 
 const GRUPPEN = [
@@ -396,6 +396,9 @@ const KACHELN = [
   {gruppe:'buero',datei:'https://info.ichbindermaler.de/videofreigabe',icon:'haken',
    name:'Videofreigabe',text:'Freigabestatus der Kundenvideos',
    rollen:['buero','chef']},
+  {gruppe:'buero',datei:'chef.html',icon:'diagramm',name:'Chef-App',marke:'arbeit',
+   text:'Aufgaben, Ideen, Termine, Zeiterfassung und alle Tools auf einen Blick',
+   rollen:['chef']},
   {gruppe:'buero',datei:'controlling.html',icon:'diagramm',name:'Controlling & Baustellen',
    text:'Zahlen und laufende Baustellen auf einen Blick',basis:'buero',marke:'arbeit',
    rollen:['meister','chef','inhaber']},
@@ -871,6 +874,10 @@ async function start(){
   const token = tokenErmitteln();
   try{
     const person = await mitarbeiterLaden(token);
+    if (person && person.rolle === 'chef' && !/[?&]alt=1/.test(location.search) && !/[?&]vorschau/.test(location.search)){
+      location.replace('chef.html');
+      return;
+    }
     if (person) zeichnen(person);
     else hinweis('Wer bist du?',
       'Dieser Link gehört zu keinem Zugang. Frag im Büro nach deinem persönlichen Link – ' +
