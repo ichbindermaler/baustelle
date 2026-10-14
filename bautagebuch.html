@@ -475,9 +475,10 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   <div class="eingabe">
     <label for="vZeitSlider">Arbeitszeit</label>
     <div class="zeitSlider">
-      <input type="range" id="vZeitSlider" min="0.5" max="12" step="0.5" value="8">
+      <input type="range" id="vZeitSlider" min="0" max="12" step="0.5" value="8">
       <div class="zeitAnzeige"><span id="vZeitWert">8</span> Std.</div>
     </div>
+    <p id="vZeitHinweis" class="verborgen" style="margin-top:6px;font-size:13px;font-weight:600;color:var(--tinte);"></p>
     <p style="margin-top:6px;font-size:12.5px;color:var(--grau);">
       Fürs Geld zählt, was im Büro läuft — das hier ist nur zur Aufteilung auf die Baustellen.
     </p>
@@ -597,7 +598,7 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
     <section class="block" id="blockZeit">
       <h2><span class="zaehler">04</span> Arbeitszeit</h2>
       <div class="zeitSlider">
-        <input type="range" id="pZeitSlider" min="0.5" max="12" step="0.5" value="8">
+        <input type="range" id="pZeitSlider" min="0" max="12" step="0.5" value="8">
         <div class="zeitAnzeige"><span id="pZeitWert">8</span> Std.</div>
       </div>
       <p style="margin-top:8px;font-size:12px;color:var(--grau);">
@@ -735,6 +736,7 @@ function starteSeite(){
     ich.rolle = p.rolle || '';
     $('werName').textContent = ich.vorname;
     vZeitStandardSetzen();   // jetzt mit der echten Rolle statt dem Leer-Standard
+    tagesBerichteLaden();
     baustellenLaden();
     einsatzLaden();
     baueinweisungenLaden();
@@ -1476,11 +1478,94 @@ function standardStunden(datumIso, rolle){
    von einer KI-erkannten Zeitangabe aus der Sprachaufnahme nicht mehr
    überschrieben. Unberührt gilt weiter der wochentagsbasierte Standard. */
 var vZeitBeruehrt = false;
+
+/* ===== Stunden, die heute schon eingetragen sind =====
+   Der Vorschlag für den nächsten Eintrag ist Standard minus alles, was der
+   Mitarbeiter an diesem Tag schon eingetragen hat - egal für welche
+   Baustelle, auch mehrere Einträge für dieselbe Baustelle zählen. So landen
+   am Ende des Tages nicht dreimal 8,5 Std. in der Auswertung.
+   Quellen: (1) eigene Berichte vom Server, (2) lokal gemerkte, gerade
+   gesendete Einträge, falls der Server sie noch nicht kennt, (3) Einträge
+   in der Warteschlange, die noch nicht angekommen sind. */
+var STUNDEN_LOKAL_KEY = 'mb_stunden_gesendet';
+var tagesServerBerichte = null;   // null = noch nicht geladen / nicht erreichbar
+var tagesServerTs = 0;
+
+function stundenLokalLesen(){
+  try{ return JSON.parse(localStorage.getItem(STUNDEN_LOKAL_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function stundenLokalMerken(name, datum, stunden, id){
+  var liste = stundenLokalLesen().filter(function(e){ return Date.now() - e.ts < 3 * 86400000; });
+  liste.push({ name: name, datum: datum, stunden: stunden, id: id || null, ts: Date.now() });
+  try{ localStorage.setItem(STUNDEN_LOKAL_KEY, JSON.stringify(liste)); }catch(e){}
+}
+function berichtStunden(b){
+  var z = Number(b.arbeitszeit_stunden);
+  if (z > 0) return z;
+  return parseStundenAusText(b.zeitschaetzung) || 0;   // ältere Einträge nur mit Text
+}
+function stundenSchonErfasst(name, datum){
+  var summe = 0;
+  var eigene = wiederaufnahmeId ? String(wiederaufnahmeId) : null;   // den Eintrag, den man gerade bearbeitet, nicht mitzählen
+  (tagesServerBerichte || []).forEach(function(b){
+    if (b.mitarbeiter_spitzname !== name || b.datum !== datum) return;
+    if (eigene && String(b.Id) === eigene) return;
+    summe += berichtStunden(b);
+  });
+  stundenLokalLesen().forEach(function(e){
+    if (e.name !== name || e.datum !== datum) return;
+    if (tagesServerBerichte && e.ts <= tagesServerTs) return;   // Server kennt ihn schon
+    if (eigene && e.id && String(e.id) === eigene) return;
+    summe += Number(e.stunden) || 0;
+  });
+  warteschlangeLesen().forEach(function(e){
+    var b = e && e.bericht;
+    if (!b || b.mitarbeiter_spitzname !== name || b.datum !== datum) return;
+    if (eigene && b.Id && String(b.Id) === eigene) return;
+    summe += Number(b.arbeitszeit_stunden) || 0;
+  });
+  return Math.round(summe * 2) / 2;
+}
+function tagesBerichteLaden(){
+  var kontrolle = new AbortController();
+  var timer = setTimeout(function(){ kontrolle.abort(); }, 10000);
+  var start = Date.now();
+  return fetch(BUERO, {
+    method:'POST', headers:{'Content-Type':'application/json'}, signal: kontrolle.signal,
+    body: JSON.stringify({ aktion:'bautagebuch_laden' })
+  })
+  .then(function(r){ if (!r.ok) throw new Error('Status ' + r.status); return r.json(); })
+  .then(function(d){
+    clearTimeout(timer);
+    var grenze = new Date(Date.now() - 45 * 86400000).toISOString().slice(0, 10);
+    tagesServerBerichte = ((d && d.berichte) || [])
+      .filter(function(b){ return (b.datum || '') >= grenze; })
+      .map(function(b){ return { Id:b.Id, mitarbeiter_spitzname:b.mitarbeiter_spitzname, datum:b.datum,
+                                 arbeitszeit_stunden:b.arbeitszeit_stunden, zeitschaetzung:b.zeitschaetzung }; });
+    tagesServerTs = start;
+    vZeitStandardSetzen();
+  })
+  .catch(function(){ clearTimeout(timer); /* ohne Serverdaten gilt nur das lokal Gemerkte - kein Fehler für den Mitarbeiter */ });
+}
+
 function vZeitStandardSetzen(){
   if (vZeitBeruehrt) return;
   var wert = standardStunden($('datum').value, ich.rolle);
+  var schon = 0;
+  if (STUNDEN_STANDARD_ROLLEN.indexOf(ich.rolle) !== -1){
+    schon = stundenSchonErfasst(aktuellerMitarbeiter(), $('datum').value || heuteIso());
+  }
+  if (schon > 0) wert = Math.max(0, wert - schon);
   $('vZeitSlider').value = wert;
   $('vZeitWert').textContent = String(wert).replace('.', ',');
+  var hinweis = $('vZeitHinweis');
+  if (schon > 0){
+    hinweis.textContent = 'Heute schon eingetragen: ' + String(schon).replace('.', ',') + ' Std. — der Regler steht auf dem Rest.';
+    hinweis.classList.remove('verborgen');
+  } else {
+    hinweis.classList.add('verborgen');
+  }
 }
 
 /* ===== Protokoll aufbauen ===== */
@@ -1654,6 +1739,8 @@ async function warteschlangeAbsenden(){
         body: JSON.stringify({ aktion:'bautagebuch_speichern', bericht: liste[i].bericht })
       });
       if (!antwort.ok) throw new Error('Status ' + antwort.status);
+      var gesendet = liste[i].bericht;
+      stundenLokalMerken(gesendet.mitarbeiter_spitzname, gesendet.datum, gesendet.arbeitszeit_stunden, gesendet.Id);
     }catch(e){
       rest.push(liste[i]);   // wieder fehlgeschlagen, bleibt in der Warteschlange
     }
@@ -1751,6 +1838,8 @@ $('ablegen').addEventListener('click', function(){
     clearTimeout(zeitlimitTimer);
     // Erfolgreich angekommen - aus der Warteschlange wieder raus.
     warteschlangeSchreiben(warteschlangeLesen().filter(function(e){ return e.localId !== localId; }));
+    stundenLokalMerken(bericht.mitarbeiter_spitzname, bericht.datum, bericht.arbeitszeit_stunden, bericht.Id);
+    tagesBerichteLaden();   // Server-Stand für den nächsten Vorschlag auffrischen
     knopf.textContent = 'Ans Büro geschickt ✓';
     knopf.classList.remove('primaer');
   })
