@@ -239,6 +239,14 @@ textarea{resize:vertical;min-height:76px;line-height:1.5;}
   padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
 }
 .leisteHaupt .hinweis{font-size:12.5px;color:var(--grau);flex:1 1 100%;order:-1;}
+.lueckenBox{
+  background:#FBEFEC;border:1px solid #F0D5CE;border-left:4px solid var(--rot);
+  border-radius:8px;padding:12px 14px;margin:0 0 18px;font-size:14px;line-height:1.45;
+}
+.lueckenBox b{font-family:'Oswald',sans-serif;font-weight:600;font-size:16px;display:block;margin-bottom:2px;}
+.lueckenBox .schritte{margin:8px 0 0;}
+.weiterEintrag{flex:1 1 100%;font-size:14px;color:var(--tinte);background:#EAF6EC;border:1px solid #CFE8D5;
+  border-radius:8px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
 .buero-grund{
   background:#FBEFEC;border:1px solid #F0D5CE;border-left:3px solid var(--rot);
   border-radius:8px;padding:11px 14px;margin:0 20px 14px;font-size:13.5px;line-height:1.5;
@@ -438,6 +446,8 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
 
   <div class="buero-grund verborgen" id="bueroHinweisAufnahme"></div>
 
+  <div class="lueckenBox verborgen" id="lueckenBox"></div>
+
   <div class="eingabe verborgen" id="blockMitarbeiterZiel">
     <label for="mitarbeiterZiel">Für welchen Mitarbeiter — Nachtrag ausm Büro</label>
     <select id="mitarbeiterZiel">
@@ -536,6 +546,10 @@ details.roh p{margin-top:10px;color:var(--grau);line-height:1.7;white-space:pre-
   <div class="leisteHaupt">
     <span class="hinweis">Entwurf — alles hier ist direkt überschreibbar.</span>
     <button class="knopf primaer knopfGross" id="ablegen">Ans Büro weiterleiten</button>
+    <div class="weiterEintrag verborgen" id="weiterEintrag">
+      <span>Warst du an dem Tag noch auf einer anderen Baustelle?</span>
+      <button class="knopf" id="weiterEintragKnopf" type="button">+ Weitere Baustelle eintragen</button>
+    </div>
   </div>
 
   <div class="leisteNeben">
@@ -699,6 +713,178 @@ function heuteIso(){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
+/* ===== Fehlende Bautagebücher – gemeinsame Regel =====
+   Steht wortgleich in index.html, bautagebuch.html und was-war-los.html.
+   Bei Änderungen bitte in allen drei Dateien gleich ändern.
+   - Grundlage: Einsatzplan (wer-wohin) minus abgegebene Bautagebücher.
+   - Alte, leere Erinnerungs-Einträge ("… nachgefragt am …") zählen NICHT
+     als abgegeben.
+   - Ist für einen Tag schon das Tagessoll an Stunden erfasst (Mo–Do 8,5,
+     Fr 6), gilt der Tag als erledigt – auch wenn eine zweite geplante
+     Baustelle keinen Eintrag hat (dann war man eben nur auf einer) oder
+     man spontan auf einer ungeplanten Baustelle war.
+   - Baustellennamen werden tolerant verglichen (Groß/klein, Leerzeichen).
+   - Stufe 1 "heute": am selben Tag ab 15:30 Uhr. Stufe 2 "fehlt": ab dem
+     Folgetag. */
+var LUECKE_AB_DATUM = '2026-08-30';     // vorher lief das Bautagebuch noch nicht im Echtbetrieb
+var LUECKE_HEUTE_AB_MINUTE = 15 * 60 + 30;
+var LUECKE_ABWESEND = ['Krank','Urlaub','Schule','Sonstige Abwesenheit','Kurzarbeit'];
+
+function lueckeNorm(s){
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ').trim();
+}
+function lueckeIstAbwesend(text){
+  var t = String(text || '').toLowerCase();
+  return LUECKE_ABWESEND.some(function(a){ return t.indexOf(a.toLowerCase()) === 0; });
+}
+function lueckeSegmente(text){
+  return String(text || '').split('+').map(function(s){ return s.trim(); }).filter(Boolean).map(function(seg){
+    var m = seg.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    return m ? { baustelle: m[1].trim(), zeit: m[2].trim() } : { baustelle: seg, zeit: '' };
+  });
+}
+function lueckeIstErinnerung(b){
+  return /(Vom Büro|Automatisch) nachgefragt am/.test(b.notiz || '') &&
+    !String(b.taetigkeiten || '').trim() && !String(b.transkript || '').trim();
+}
+function lueckeStunden(b){
+  var z = Number(b.arbeitszeit_stunden);
+  if (z > 0) return z;
+  var m = String(b.zeitschaetzung || '').replace(',', '.').match(/(\d+(\.\d+)?)/);
+  var x = m ? parseFloat(m[1]) : 0;
+  return (x > 0 && x <= 16) ? x : 0;
+}
+function lueckeSoll(iso){
+  return new Date(iso + 'T12:00:00').getDay() === 5 ? 6 : 8.5;
+}
+function lueckeIso(d){   // lokales Datum als JJJJ-MM-TT
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function lueckeMontag(key){   // Wochenschlüssel "2026-43" -> Montag (lokal, 12 Uhr)
+  var teile = String(key).split('-');
+  var jahr = Number(teile[0]), woche = Number(teile[1]);
+  var jan4 = new Date(jahr, 0, 4, 12);
+  var montag = new Date(jan4);
+  montag.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (woche - 1) * 7);
+  return montag;
+}
+function lueckeDatumText(iso){
+  var d = new Date(iso + 'T12:00:00');
+  return ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()] + ' ' +
+    String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+}
+
+/* optionen: { name: nur diese Person (leer = alle), tage: wie weit zurück,
+   jetzt: Date (für Tests) }. Ergebnis neueste zuerst:
+   [{ name, datum, baustelle, zeit, stufe:'heute'|'fehlt', erfasst, soll }] */
+function lueckenBerechnen(wochen, berichte, optionen){
+  optionen = optionen || {};
+  var jetzt = optionen.jetzt || new Date();
+  var heute = lueckeIso(jetzt);
+  var heuteSchonFaellig = (jetzt.getHours() * 60 + jetzt.getMinutes()) >= LUECKE_HEUTE_AB_MINUTE;
+  var grenze = lueckeIso(new Date(jetzt.getTime() - (optionen.tage || 14) * 86400000));
+  if (grenze < LUECKE_AB_DATUM) grenze = LUECKE_AB_DATUM;
+  var nurName = optionen.name ? lueckeNorm(optionen.name) : '';
+  var tage = ['mo','di','mi','do','fr'];
+
+  var abgegeben = {};   // "name|datum" -> Liste echter Berichte
+  (berichte || []).forEach(function(b){
+    if (!b || lueckeIstErinnerung(b)) return;
+    var k = lueckeNorm(b.mitarbeiter_spitzname) + '|' + b.datum;
+    (abgegeben[k] = abgegeben[k] || []).push(b);
+  });
+
+  var ergebnis = [];
+  Object.keys(wochen || {}).forEach(function(key){
+    var montag = lueckeMontag(key);
+    ((wochen[key] && wochen[key].rows) || []).forEach(function(zeile){
+      var name = String(zeile.name || '').trim();
+      if (!name) return;
+      if (nurName && lueckeNorm(name) !== nurName) return;
+      tage.forEach(function(tag, i){
+        var d = new Date(montag);
+        d.setDate(montag.getDate() + i);
+        var datum = lueckeIso(d);
+        if (datum > heute || datum < grenze) return;
+        if (datum === heute && !heuteSchonFaellig) return;
+
+        var segmente = lueckeSegmente(zeile[tag]);
+        var baustellen = segmente.filter(function(s){ return !lueckeIstAbwesend(s.baustelle); });
+        if (!baustellen.length) return;
+        var teilsAbwesend = baustellen.length < segmente.length;
+
+        var eigene = abgegeben[lueckeNorm(name) + '|' + datum] || [];
+        var erfasst = eigene.reduce(function(s, b){ return s + lueckeStunden(b); }, 0);
+        var soll = lueckeSoll(datum);
+        if (!teilsAbwesend && erfasst >= soll - 0.01) return;   // Tagessoll erfasst = Tag erledigt
+
+        baustellen.forEach(function(s){
+          var da = eigene.some(function(b){ return lueckeNorm(b.baustelle_text) === lueckeNorm(s.baustelle); });
+          if (da) return;
+          ergebnis.push({ name: name, datum: datum, baustelle: s.baustelle, zeit: s.zeit,
+                          stufe: datum === heute ? 'heute' : 'fehlt', erfasst: erfasst, soll: soll });
+        });
+      });
+    });
+  });
+  return ergebnis.sort(function(a, b){ return b.datum.localeCompare(a.datum) || a.name.localeCompare(b.name); });
+}
+/* ===== Ende gemeinsame Regel ===== */
+
+/* Von der Startseite kommend (?datum=…&baustelle=…) oder per Tipp auf eine
+   offene Lücke: diese Baustelle beim nächsten Zeichnen der Auswahl setzen. */
+var vorwahlBaustelle = '';
+
+/* Alle eigenen Berichte, die wir kennen: Server + gerade gesendete (Server
+   evtl. noch nicht aktuell) + Warteschlange. */
+function bekannteBerichte(){
+  var liste = (tagesServerBerichte || []).slice();
+  stundenLokalLesen().forEach(function(e){
+    if (tagesServerBerichte && e.ts <= tagesServerTs) return;
+    liste.push({ mitarbeiter_spitzname: e.name, datum: e.datum, baustelle_text: e.baustelle || '', arbeitszeit_stunden: e.stunden });
+  });
+  warteschlangeLesen().forEach(function(e){ if (e && e.bericht) liste.push(e.bericht); });
+  return liste;
+}
+function baustelleSchonErfasst(datum, baustelle){
+  var name = lueckeNorm(aktuellerMitarbeiter());
+  return bekannteBerichte().some(function(b){
+    return lueckeNorm(b.mitarbeiter_spitzname) === name && b.datum === datum &&
+      !lueckeIstErinnerung(b) && lueckeNorm(b.baustelle_text) === lueckeNorm(baustelle);
+  });
+}
+
+/* Offene Tage oben in der Aufnahme - gleiche Regel wie Startseite und Büro.
+   Nur vergangene Tage (heute ist ohnehin das Standard-Datum). */
+function lueckenZeigen(){
+  var box = $('lueckenBox');
+  if (!tagesServerBerichte || !Object.keys(wochenDaten).length || !aktuellerMitarbeiter()){ box.classList.add('verborgen'); return; }
+  var offen = lueckenBerechnen(wochenDaten, bekannteBerichte(), { name: aktuellerMitarbeiter() })
+    .filter(function(l){ return l.stufe === 'fehlt'; });
+  if (!offen.length){ box.classList.add('verborgen'); return; }
+  box.innerHTML = '<b>' + (offen.length === 1 ? 'Ein Tag ist noch offen' : offen.length + ' Tage sind noch offen') + '</b>' +
+    'Antippen, dann sind Datum und Baustelle schon eingestellt:' +
+    '<div class="schritte">' + offen.map(function(l, i){
+      var aktiv = $('datum').value === l.datum && lueckeNorm($('baustelle').value) === lueckeNorm(l.baustelle);
+      return '<button type="button" class="schrittChip" data-luecke="' + i + '" aria-pressed="' + aktiv + '">' +
+        escape(lueckeDatumText(l.datum) + ' · ' + l.baustelle) + '</button>';
+    }).join('') + '</div>';
+  Array.prototype.forEach.call(box.querySelectorAll('[data-luecke]'), function(knopf){
+    knopf.addEventListener('click', function(){
+      var l = offen[Number(knopf.getAttribute('data-luecke'))];
+      lueckeWaehlen(l.datum, l.baustelle);
+    });
+  });
+  box.classList.remove('verborgen');
+}
+function lueckeWaehlen(datum, baustelle){
+  vorwahlBaustelle = baustelle;
+  vZeitBeruehrt = false;
+  $('datum').value = datum;
+  datumGewechselt();
+  lueckenZeigen();
+}
+
 function tokenHolen(){
   var ausUrl = new URLSearchParams(location.search).get('m');
   if (ausUrl){ localStorage.setItem('mb_token', ausUrl); return ausUrl; }
@@ -710,7 +896,15 @@ function starteSeite(){
   warteschlangeAnzeigen();
   $('datum').value = heuteIso();
   $('datum').max = heuteIso();   // kein Eintrag für die Zukunft
-  $('datum').addEventListener('change', datumGewechselt);
+  $('datum').addEventListener('change', function(){ vorwahlBaustelle = ''; datumGewechselt(); lueckenZeigen(); });
+  // Von der Startseite: ?datum=JJJJ-MM-TT&baustelle=Name
+  var startParameter = new URLSearchParams(location.search);
+  var startDatum = startParameter.get('datum') || '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(startDatum) && startDatum <= heuteIso()){
+    $('datum').value = startDatum;
+    vorwahlBaustelle = startParameter.get('baustelle') || '';
+    datumGewechselt();
+  }
 
   $('vZeitSlider').addEventListener('input', function(){
     vZeitBeruehrt = true;
@@ -854,6 +1048,7 @@ $('mitarbeiterZiel').addEventListener('change', function(){
   baustellenZeichnen();
   pruefeBereit();
   pruefeTippenBereit();
+  lueckenZeigen();
 });
 
 function baustellenLaden(){
@@ -888,6 +1083,7 @@ function einsatzLaden(){
     var e = Array.isArray(d) ? d[0] : d;
     wochenDaten = (e && e.weeks) ? e.weeks : {};
     baustellenZeichnen();
+    lueckenZeigen();
   })
   .catch(function(){});
 }
@@ -952,7 +1148,7 @@ function baueinweisungAnzeigen(){
 $('baustelle').addEventListener('change', baueinweisungAnzeigen);
 
 function baustellenZeichnen(){
-  var gewaehlt = $('baustelle').value;
+  var gewaehlt = $('baustelle').value || vorwahlBaustelle;
   var geplantSegmente = einsatzFuerDatum($('datum').value);
   var abwesend = geplantSegmente.length === 1 && istAbwesenheit(geplantSegmente[0].baustelle);
 
@@ -960,13 +1156,25 @@ function baustellenZeichnen(){
   // an einem Tag sind normal (z.B. vormittags/nachmittags getrennt) -
   // in dem Fall wird unten nichts automatisch reingefüllt, sondern zur
   // Auswahl angeboten.
-  var geplanteBaustellen = abwesend ? [] : geplantSegmente.filter(function(s){ return !istAbwesenheit(s.baustelle); });
+  var alleGeplanten = abwesend ? [] : geplantSegmente.filter(function(s){ return !istAbwesenheit(s.baustelle); });
+  // Für eine geplante Baustelle schon eingetragen? Dann nicht nochmal
+  // automatisch vorschlagen - der nächste Eintrag an dem Tag ist dann meist
+  // die andere (oder eine spontane) Baustelle. Auswählbar bleibt sie trotzdem.
+  var datumJetzt = $('datum').value || heuteIso();
+  var geplanteBaustellen = alleGeplanten.filter(function(s){ return !baustelleSchonErfasst(datumJetzt, s.baustelle); });
+  var allesGeplanteErfasst = alleGeplanten.length > 0 && geplanteBaustellen.length === 0;
   var vorschlag = geplanteBaustellen.length === 1 ? geplanteBaustellen[0].baustelle : '';
 
   var namen = alleBaustellen.filter(function(n){ return !istAbwesenheit(n); });
-  geplanteBaustellen.forEach(function(s){
+  alleGeplanten.forEach(function(s){
     if (namen.indexOf(s.baustelle) === -1) namen.unshift(s.baustelle);
   });
+  if (vorwahlBaustelle){
+    // Toleranter Abgleich, damit "kita fuhr" aus dem Plan die Liste trifft
+    var treffer = namen.filter(function(n){ return lueckeNorm(n) === lueckeNorm(vorwahlBaustelle); })[0];
+    if (treffer){ gewaehlt = treffer; } else { namen.unshift(vorwahlBaustelle); gewaehlt = vorwahlBaustelle; }
+    if (alleBaustellen.length) vorwahlBaustelle = '';   // einmal gesetzt, danach gilt die Auswahl im Feld
+  }
 
   $('baustelle').innerHTML =
     '<option value="">— auswählen —</option>' +
@@ -1017,6 +1225,21 @@ function baustellenZeichnen(){
     if (ich.rolle === 'geselle' || ich.rolle === 'azubi' || ich.rolle === 'helfer'){
       $('baustelleAuswahlFeld').classList.add('verborgen');
     }
+    var andereChip = document.createElement('button');
+    andereChip.type = 'button';
+    andereChip.className = 'schrittChip';
+    andereChip.textContent = 'Andere Baustelle …';
+    andereChip.addEventListener('click', function(){
+      // Spontan woanders gewesen: volle Liste aufklappen
+      $('baustelleAuswahlFeld').classList.remove('verborgen');
+      $('baustelle').value = '';
+      Array.prototype.forEach.call($('mehrfachChips').querySelectorAll('.schrittChip'), function(c){
+        c.setAttribute('aria-pressed', c === andereChip ? 'true' : 'false');
+      });
+      $('baustelle').focus();
+      pruefeBereit();
+      pruefeTippenBereit();
+    });
     geplanteBaustellen.forEach(function(s){
       var chip = document.createElement('button');
       chip.type = 'button';
@@ -1033,7 +1256,13 @@ function baustellenZeichnen(){
       });
       $('mehrfachChips').appendChild(chip);
     });
+    $('mehrfachChips').appendChild(andereChip);
     $('mehrfachChips').classList.remove('verborgen');
+  } else if (allesGeplanteErfasst){
+    $('baustelle').value = '';
+    $('baustelleHinweis').textContent = 'Für ' + alleGeplanten.map(function(s){ return s.baustelle; }).join(' und ') +
+      ' hast du an dem Tag schon eingetragen — für eine weitere Baustelle bitte auswählen.';
+    $('baustelleHinweis').classList.remove('verborgen');
   } else if (vorschlag){
     $('baustelle').value = vorschlag;
     $('baustelleHinweis').textContent = 'Aus dem Einsatzplan übernommen — bei Bedarf ändern.';
@@ -1495,9 +1724,9 @@ function stundenLokalLesen(){
   try{ return JSON.parse(localStorage.getItem(STUNDEN_LOKAL_KEY) || '[]'); }
   catch(e){ return []; }
 }
-function stundenLokalMerken(name, datum, stunden, id){
+function stundenLokalMerken(name, datum, stunden, id, baustelle){
   var liste = stundenLokalLesen().filter(function(e){ return Date.now() - e.ts < 3 * 86400000; });
-  liste.push({ name: name, datum: datum, stunden: stunden, id: id || null, ts: Date.now() });
+  liste.push({ name: name, datum: datum, stunden: stunden, id: id || null, baustelle: baustelle || '', ts: Date.now() });
   try{ localStorage.setItem(STUNDEN_LOKAL_KEY, JSON.stringify(liste)); }catch(e){}
 }
 function berichtStunden(b){
@@ -1542,9 +1771,13 @@ function tagesBerichteLaden(){
     tagesServerBerichte = ((d && d.berichte) || [])
       .filter(function(b){ return (b.datum || '') >= grenze; })
       .map(function(b){ return { Id:b.Id, mitarbeiter_spitzname:b.mitarbeiter_spitzname, datum:b.datum,
-                                 arbeitszeit_stunden:b.arbeitszeit_stunden, zeitschaetzung:b.zeitschaetzung }; });
+                                 arbeitszeit_stunden:b.arbeitszeit_stunden, zeitschaetzung:b.zeitschaetzung,
+                                 baustelle_text:b.baustelle_text, notiz:b.notiz,
+                                 taetigkeiten: b.taetigkeiten ? 'x' : '', transkript: b.transkript ? 'x' : '' }; });
     tagesServerTs = start;
     vZeitStandardSetzen();
+    baustellenZeichnen();
+    lueckenZeigen();
   })
   .catch(function(){ clearTimeout(timer); /* ohne Serverdaten gilt nur das lokal Gemerkte - kein Fehler für den Mitarbeiter */ });
 }
@@ -1571,6 +1804,7 @@ function vZeitStandardSetzen(){
 /* ===== Protokoll aufbauen ===== */
 function aufbauen(d){
   letztesProtokoll = d;
+  $('weiterEintrag').classList.add('verborgen');
   var knopf = $('ablegen');
   if (knopf){ knopf.disabled = false; knopf.textContent = 'Ans Büro weiterleiten'; knopf.classList.add('primaer'); }
   var p = d.protokoll;
@@ -1740,7 +1974,7 @@ async function warteschlangeAbsenden(){
       });
       if (!antwort.ok) throw new Error('Status ' + antwort.status);
       var gesendet = liste[i].bericht;
-      stundenLokalMerken(gesendet.mitarbeiter_spitzname, gesendet.datum, gesendet.arbeitszeit_stunden, gesendet.Id);
+      stundenLokalMerken(gesendet.mitarbeiter_spitzname, gesendet.datum, gesendet.arbeitszeit_stunden, gesendet.Id, gesendet.baustelle_text);
     }catch(e){
       rest.push(liste[i]);   // wieder fehlgeschlagen, bleibt in der Warteschlange
     }
@@ -1838,8 +2072,9 @@ $('ablegen').addEventListener('click', function(){
     clearTimeout(zeitlimitTimer);
     // Erfolgreich angekommen - aus der Warteschlange wieder raus.
     warteschlangeSchreiben(warteschlangeLesen().filter(function(e){ return e.localId !== localId; }));
-    stundenLokalMerken(bericht.mitarbeiter_spitzname, bericht.datum, bericht.arbeitszeit_stunden, bericht.Id);
-    tagesBerichteLaden();   // Server-Stand für den nächsten Vorschlag auffrischen
+    stundenLokalMerken(bericht.mitarbeiter_spitzname, bericht.datum, bericht.arbeitszeit_stunden, bericht.Id, bericht.baustelle_text);
+    tagesBerichteLaden();
+    $('weiterEintrag').classList.remove('verborgen');   // Server-Stand für den nächsten Vorschlag auffrischen
     knopf.textContent = 'Ans Büro geschickt ✓';
     knopf.classList.remove('primaer');
   })
@@ -1872,7 +2107,36 @@ $('neueAufnahme').addEventListener('click', function(){
   zeige('ansichtAufnahme');
 });
 
+/* Nach dem Senden: noch eine Baustelle am selben Tag (z.B. spontan
+   umgesetzt). Datum bleibt, Regler steht auf den Reststunden, die schon
+   erledigte Baustelle wird nicht nochmal vorgeschlagen. */
+$('weiterEintragKnopf').addEventListener('click', function(){
+  var datum = $('datum').value;
+  audioBlob = null; fotos = []; sekunden = 0;
+  letztesProtokoll = null;
+  wiederaufnahmeId = null;
+  vorwahlBaustelle = '';
+  document.querySelectorAll('.buero-grund').forEach(function(el){ el.classList.add('verborgen'); });
+  kategorieAuswahl = {};
+  kategorienZeichnen();
+  $('uhr').textContent = '0:00';
+  $('mikroText').textContent = 'Antippen zum Starten';
+  $('notiz').value = '';
+  $('datum').value = datum;
+  vZeitBeruehrt = false;
+  datumGewechselt();
+  lueckenZeigen();
+  document.querySelectorAll('.vorschau').forEach(function(v){ v.remove(); });
+  $('senden').disabled = true;
+  $('tippenErstellen').disabled = true;
+  $('weiterEintrag').classList.add('verborgen');
+  zeige('ansichtAufnahme');
+  window.scrollTo(0, 0);
+});
+
 $('nochmal').addEventListener('click', function(){
+  vorwahlBaustelle = '';
+  $('weiterEintrag').classList.add('verborgen');
   audioBlob = null; fotos = []; sekunden = 0;
   letztesProtokoll = null;
   wiederaufnahmeId = null;   // komplett neuer, unabhängiger Eintrag
