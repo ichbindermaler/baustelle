@@ -203,6 +203,22 @@
   /* ---------- Rollen-Vorschau (nur für Inhaber) ---------- */
   .vorschau{padding:0 0 18px}
 
+  /* ---------- Fehlende Bautagebücher (gross, nicht zu überlesen) ---------- */
+  .luecken{margin-bottom:18px;border-radius:12px;overflow:hidden;border:1px solid var(--linie);background:#fff}
+  .luecken-kopf{padding:12px 15px;font-family:'Oswald',sans-serif;font-weight:600;font-size:17px;letter-spacing:.02em}
+  .luecken-kopf small{display:block;font-family:'Inter',sans-serif;font-weight:500;font-size:13px;margin-top:2px;opacity:.92}
+  .luecken.stufe-fehlt{border-color:var(--rot)}
+  .luecken.stufe-fehlt .luecken-kopf{background:var(--rot);color:#fff}
+  .luecken.stufe-heute{border-color:#E8D5A3}
+  .luecken.stufe-heute .luecken-kopf{background:#FBF0D6;color:#7a5410}
+  .luecke-zeile{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-top:1px solid var(--linie)}
+  .luecke-text{font-size:15px;line-height:1.35;color:var(--tinte)}
+  .luecke-text b{font-weight:600}
+  .luecke-text span{display:block;font-size:12.5px;color:var(--grau)}
+  .luecke-knopf{flex:0 0 auto;display:inline-block;padding:10px 14px;border-radius:10px;background:var(--rot);color:#fff;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;text-decoration:none;white-space:nowrap}
+  .stufe-heute .luecke-knopf{background:var(--tinte)}
+
   .freigabeHinweis{
     background:#FBEFEC;border:1px solid #F0D5CE;border-left:3px solid var(--rot);
     border-radius:8px;padding:13px 15px;margin-bottom:18px;
@@ -273,6 +289,7 @@
     <div class="vorschau-knoepfe" id="vorschauKnoepfe"></div>
   </section>
 
+  <div class="luecken" id="lueckenHinweis" hidden></div>
   <div class="freigabeHinweis" id="freigabeHinweis" hidden></div>
 
   <main id="inhalt"></main>
@@ -708,43 +725,199 @@ const ERINNERUNGS_SPRUECHE = [
   '🛠️ Handwerk ohne Doku ist nur die halbe Miete.'
 ];
 
+/* ===== Fehlende Bautagebücher – gemeinsame Regel =====
+   Steht wortgleich in index.html, bautagebuch.html und was-war-los.html.
+   Bei Änderungen bitte in allen drei Dateien gleich ändern.
+   - Grundlage: Einsatzplan (wer-wohin) minus abgegebene Bautagebücher.
+   - Alte, leere Erinnerungs-Einträge ("… nachgefragt am …") zählen NICHT
+     als abgegeben.
+   - Ist für einen Tag schon das Tagessoll an Stunden erfasst (Mo–Do 8,5,
+     Fr 6), gilt der Tag als erledigt – auch wenn eine zweite geplante
+     Baustelle keinen Eintrag hat (dann war man eben nur auf einer) oder
+     man spontan auf einer ungeplanten Baustelle war.
+   - Baustellennamen werden tolerant verglichen (Groß/klein, Leerzeichen).
+   - Stufe 1 "heute": am selben Tag ab 15:30 Uhr. Stufe 2 "fehlt": ab dem
+     Folgetag. */
+var LUECKE_AB_DATUM = '2026-08-30';     // vorher lief das Bautagebuch noch nicht im Echtbetrieb
+var LUECKE_HEUTE_AB_MINUTE = 15 * 60 + 30;
+var LUECKE_ABWESEND = ['Krank','Urlaub','Schule','Sonstige Abwesenheit','Kurzarbeit'];
+
+function lueckeNorm(s){
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ').trim();
+}
+function lueckeIstAbwesend(text){
+  var t = String(text || '').toLowerCase();
+  return LUECKE_ABWESEND.some(function(a){ return t.indexOf(a.toLowerCase()) === 0; });
+}
+function lueckeSegmente(text){
+  return String(text || '').split('+').map(function(s){ return s.trim(); }).filter(Boolean).map(function(seg){
+    var m = seg.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+    return m ? { baustelle: m[1].trim(), zeit: m[2].trim() } : { baustelle: seg, zeit: '' };
+  });
+}
+function lueckeIstErinnerung(b){
+  return /(Vom Büro|Automatisch) nachgefragt am/.test(b.notiz || '') &&
+    !String(b.taetigkeiten || '').trim() && !String(b.transkript || '').trim();
+}
+function lueckeStunden(b){
+  var z = Number(b.arbeitszeit_stunden);
+  if (z > 0) return z;
+  var m = String(b.zeitschaetzung || '').replace(',', '.').match(/(\d+(\.\d+)?)/);
+  var x = m ? parseFloat(m[1]) : 0;
+  return (x > 0 && x <= 16) ? x : 0;
+}
+function lueckeSoll(iso){
+  return new Date(iso + 'T12:00:00').getDay() === 5 ? 6 : 8.5;
+}
+function lueckeIso(d){   // lokales Datum als JJJJ-MM-TT
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function lueckeMontag(key){   // Wochenschlüssel "2026-43" -> Montag (lokal, 12 Uhr)
+  var teile = String(key).split('-');
+  var jahr = Number(teile[0]), woche = Number(teile[1]);
+  var jan4 = new Date(jahr, 0, 4, 12);
+  var montag = new Date(jan4);
+  montag.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (woche - 1) * 7);
+  return montag;
+}
+function lueckeDatumText(iso){
+  var d = new Date(iso + 'T12:00:00');
+  return ['So','Mo','Di','Mi','Do','Fr','Sa'][d.getDay()] + ' ' +
+    String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.';
+}
+
+/* optionen: { name: nur diese Person (leer = alle), tage: wie weit zurück,
+   jetzt: Date (für Tests) }. Ergebnis neueste zuerst:
+   [{ name, datum, baustelle, zeit, stufe:'heute'|'fehlt', erfasst, soll }] */
+function lueckenBerechnen(wochen, berichte, optionen){
+  optionen = optionen || {};
+  var jetzt = optionen.jetzt || new Date();
+  var heute = lueckeIso(jetzt);
+  var heuteSchonFaellig = (jetzt.getHours() * 60 + jetzt.getMinutes()) >= LUECKE_HEUTE_AB_MINUTE;
+  var grenze = lueckeIso(new Date(jetzt.getTime() - (optionen.tage || 14) * 86400000));
+  if (grenze < LUECKE_AB_DATUM) grenze = LUECKE_AB_DATUM;
+  var nurName = optionen.name ? lueckeNorm(optionen.name) : '';
+  var tage = ['mo','di','mi','do','fr'];
+
+  var abgegeben = {};   // "name|datum" -> Liste echter Berichte
+  (berichte || []).forEach(function(b){
+    if (!b || lueckeIstErinnerung(b)) return;
+    var k = lueckeNorm(b.mitarbeiter_spitzname) + '|' + b.datum;
+    (abgegeben[k] = abgegeben[k] || []).push(b);
+  });
+
+  var ergebnis = [];
+  Object.keys(wochen || {}).forEach(function(key){
+    var montag = lueckeMontag(key);
+    ((wochen[key] && wochen[key].rows) || []).forEach(function(zeile){
+      var name = String(zeile.name || '').trim();
+      if (!name) return;
+      if (nurName && lueckeNorm(name) !== nurName) return;
+      tage.forEach(function(tag, i){
+        var d = new Date(montag);
+        d.setDate(montag.getDate() + i);
+        var datum = lueckeIso(d);
+        if (datum > heute || datum < grenze) return;
+        if (datum === heute && !heuteSchonFaellig) return;
+
+        var segmente = lueckeSegmente(zeile[tag]);
+        var baustellen = segmente.filter(function(s){ return !lueckeIstAbwesend(s.baustelle); });
+        if (!baustellen.length) return;
+        var teilsAbwesend = baustellen.length < segmente.length;
+
+        var eigene = abgegeben[lueckeNorm(name) + '|' + datum] || [];
+        var erfasst = eigene.reduce(function(s, b){ return s + lueckeStunden(b); }, 0);
+        var soll = lueckeSoll(datum);
+        if (!teilsAbwesend && erfasst >= soll - 0.01) return;   // Tagessoll erfasst = Tag erledigt
+
+        baustellen.forEach(function(s){
+          var da = eigene.some(function(b){ return lueckeNorm(b.baustelle_text) === lueckeNorm(s.baustelle); });
+          if (da) return;
+          ergebnis.push({ name: name, datum: datum, baustelle: s.baustelle, zeit: s.zeit,
+                          stufe: datum === heute ? 'heute' : 'fehlt', erfasst: erfasst, soll: soll });
+        });
+      });
+    });
+  });
+  return ergebnis.sort(function(a, b){ return b.datum.localeCompare(a.datum) || a.name.localeCompare(b.name); });
+}
+/* ===== Ende gemeinsame Regel ===== */
+
+/* Prüft zwei Dinge für die eingeloggte Person, still im Hintergrund:
+   1. Fehlende Bautagebücher laut Einsatzplan (gemeinsame Regel oben) -
+      grosser Block ganz oben: gelb am selben Tag ab 15:30, rot ab Folgetag.
+   2. Was das Büro "zur Bearbeitung freigegeben" hat (abgeschlossen:false bei
+      einem echten Bericht). Alte, leere Erinnerungs-Einträge zählen hier
+      nicht mehr - die stecken jetzt in Punkt 1. */
 async function freigabenPruefen(vorname){
   if (CONFIG.DEMO_MODUS) return;   // im Demo-Modus keine echten Serverdaten
   const box = $('#freigabeHinweis');
+  const holen = (aktion) => fetch(CONFIG.WEBHOOK_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ aktion })
+    }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const tokenTeil = location.search || '';
+  const trenner = tokenTeil ? '&' : '?';
   try{
-    const ergebnisse = await Promise.all(FREIGABE_QUELLEN.map(q =>
-      fetch(CONFIG.WEBHOOK_URL, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ aktion:q.aktion })
-      }).then(r => r.ok ? r.json() : { berichte:[] }).catch(() => ({ berichte:[] }))
-    ));
+    const [plan, ...ergebnisse] = await Promise.all([
+      holen('einsatzplan_laden'),
+      ...FREIGABE_QUELLEN.map(q => holen(q.aktion))
+    ]);
 
+    // --- 1. Fehlende Bautagebücher ---
+    const btDaten = ergebnisse[0];
+    const planDaten = Array.isArray(plan) ? plan[0] : plan;
+    if (btDaten && planDaten && planDaten.weeks){
+      lueckenZeigen(lueckenBerechnen(planDaten.weeks, btDaten.berichte || [], { name: vorname }), tokenTeil, trenner);
+    }
+
+    // --- 2. Vom Büro zur Bearbeitung freigegeben ---
     const treffer = [];
     ergebnisse.forEach((daten, i) => {
       const q = FREIGABE_QUELLEN[i];
-      (daten.berichte || []).forEach(b => {
-        if (b.mitarbeiter_spitzname === vorname && !b.abgeschlossen){
-          treffer.push({ ...q, id:b.Id, datum:b.datum, baustelle:b.baustelle_text });
-        }
+      ((daten && daten.berichte) || []).forEach(b => {
+        if (lueckeNorm(b.mitarbeiter_spitzname) !== lueckeNorm(vorname) || b.abgeschlossen) return;
+        if (q.aktion === 'bautagebuch_laden' && lueckeIstErinnerung(b)) return;
+        treffer.push({ ...q, id:b.Id, datum:b.datum, baustelle:b.baustelle_text });
       });
     });
 
     if (!treffer.length){ box.hidden = true; return; }
 
     const zufallsSpruch = () => ERINNERUNGS_SPRUECHE[Math.floor(Math.random() * ERINNERUNGS_SPRUECHE.length)];
-    const tokenTeil = location.search || '';
-    const trenner = tokenTeil ? '&' : '?';
     box.innerHTML = treffer.map(t =>
       `<div class="freigabeEintrag">
          <p class="freigabeSpruch">${zufallsSpruch()}</p>
-         <p><strong>${t.label}</strong> vom ${t.datum} (${escapeHtml(t.baustelle)}) —
-          <a href="${t.ziel}${tokenTeil}${trenner}bericht=${t.id}">jetzt nachtragen</a>.</p>
+         <p><strong>${t.label}</strong> vom ${t.datum} (${escapeHtml(t.baustelle)}) — vom Büro zurückgegeben,
+          <a href="${t.ziel}${tokenTeil}${trenner}bericht=${t.id}">jetzt nachbessern</a>.</p>
        </div>`
     ).join('');
     box.hidden = false;
   }catch(e){
     box.hidden = true;
   }
+}
+
+function lueckenZeigen(luecken, tokenTeil, trenner){
+  const box = $('#lueckenHinweis');
+  if (!luecken.length){ box.hidden = true; return; }
+  const alt = luecken.filter(l => l.stufe === 'fehlt');
+  const stufe = alt.length ? 'fehlt' : 'heute';
+  const spruch = ERINNERUNGS_SPRUECHE[Math.floor(Math.random() * ERINNERUNGS_SPRUECHE.length)];
+  const kopf = stufe === 'fehlt'
+    ? `${alt.length === 1 ? 'Ein Bautagebuch fehlt' : alt.length + ' Bautagebücher fehlen'}<small>${spruch}</small>`
+    : `Heute noch kein Bautagebuch<small>Kurz reinsprechen, dann ist Feierabend.</small>`;
+  box.className = 'luecken auf stufe-' + stufe;
+  box.innerHTML = `<div class="luecken-kopf">${kopf}</div>` + luecken.map(l => {
+    const link = `bautagebuch.html${tokenTeil}${trenner}datum=${encodeURIComponent(l.datum)}&baustelle=${encodeURIComponent(l.baustelle)}`;
+    const wann = l.stufe === 'heute' ? 'Heute' : lueckeDatumText(l.datum);
+    const zusatz = l.erfasst > 0 ? `<span>${String(l.erfasst).replace('.', ',')} von ${String(l.soll).replace('.', ',')} Std. schon eingetragen</span>` : '';
+    return `<div class="luecke-zeile">
+      <div class="luecke-text"><b>${wann}</b> · ${escapeHtml(l.baustelle)}${zusatz}</div>
+      <a class="luecke-knopf" href="${link}">${l.stufe === 'heute' ? 'Eintragen' : 'Nachtragen'} →</a>
+    </div>`;
+  }).join('');
+  box.hidden = false;
 }
 
 function escapeHtml(s){
